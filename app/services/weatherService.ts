@@ -1,20 +1,20 @@
-import axios, { AxiosInstance } from 'axios';
-import { OPENWEATHER_API_KEY } from '@env';
+import axios from 'axios';
+import * as Location from 'expo-location';
 
-const API_KEY = OPENWEATHER_API_KEY;
-const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
 
 export interface WeatherForecast {
   date: string;
+  temperature: number;
   temp: {
     day: number;
     min: number;
     max: number;
   };
   weather: {
-    main: string;
     description: string;
     icon: string;
+    main: string;
   };
   wind_speed: number;
   humidity: number;
@@ -26,232 +26,232 @@ export interface WeatherForecast {
   dayHours: string;
 }
 
-function calculateBikingScore(temp: number, windSpeed: number, precipitation: number, weatherMain: string): { score: number; message: string } {
+interface LocationInfo {
+  coords: {
+    latitude: number;
+    longitude: number;
+  };
+  city: string;
+}
+
+function calculateBikingScore(temp: number, windSpeed: number, precipitation: number, weatherMain: string) {
   let score = 100;
   let messages: string[] = [];
 
-  // Temperature score (ideal range: 15-22°C)
-  if (temp <= 0) {
-    score -= 70;
-    messages.push("Freezing");
-  } else if (temp <= 5) {
-    score -= 50;
-    messages.push("Very cold");
-  } else if (temp <= 10) {
-    score -= 30;
-    messages.push("Cold");
-  } else if (temp <= 13) {
+  // Temperature score (ideal range: 15-25°C)
+  if (temp < 5) {
+    score -= 25;
+    messages.push("Too cold");
+  } else if (temp < 10) {
     score -= 15;
-    messages.push("Cool");
-  } else if (temp > 30) {
-    score -= 40;
+    messages.push("Bit chilly");
+  } else if (temp > 35) {
+    score -= 25;
     messages.push("Too hot");
-  } else if (temp > 25) {
+  } else if (temp > 30) {
     score -= 15;
-    messages.push("Warm");
-  } else if (temp > 22) {
-    score -= 5;
-    messages.push("Bit warm");
+    messages.push("Quite warm");
   }
 
-  // Wind speed score (ideal: < 15 km/h)
-  // Convert m/s to km/h (multiply by 3.6)
-  const windSpeedKmh = windSpeed * 3.6;
-  if (windSpeedKmh > 40) {
-    score -= 50;
-    messages.push("Dangerous winds");
-  } else if (windSpeedKmh > 30) {
-    score -= 35;
+  // Wind speed score (ideal: < 20 km/h)
+  if (windSpeed > 40) {
+    score -= 30;
     messages.push("Very windy");
-  } else if (windSpeedKmh > 20) {
+  } else if (windSpeed > 30) {
     score -= 20;
     messages.push("Windy");
-  } else if (windSpeedKmh > 15) {
+  } else if (windSpeed > 20) {
     score -= 10;
     messages.push("Breezy");
   }
 
-  // Wind chill effect (when temperature is below 10°C)
-  if (temp < 10 && windSpeedKmh > 15) {
-    score -= 15;
-    messages.push("Wind chill");
-  }
-
-  // Precipitation and weather conditions
-  if (precipitation > 5) {
-    score -= 50;
+  // Precipitation score (stricter for rain)
+  if (precipitation > 10) {
+    score -= 60;
     messages.push("Heavy rain");
+  } else if (precipitation > 5) {
+    score -= 45;
+    messages.push("Moderate rain");
   } else if (precipitation > 2) {
-    score -= 35;
-    messages.push("Rainy");
-  } else if (precipitation > 0) {
-    score -= 20;
+    score -= 30;
     messages.push("Light rain");
+  } else if (precipitation > 0) {
+    score -= 15;
+    messages.push("Slight chance of rain");
   }
 
-  // Additional weather conditions
-  const weatherLower = weatherMain.toLowerCase();
-  if (weatherLower.includes('snow') || weatherLower.includes('sleet')) {
-    score -= 70;
-    messages.push("Snowing");
-  } else if (weatherLower.includes('thunderstorm')) {
-    score -= 80;
-    messages.push("Thunderstorm");
-  } else if (weatherLower.includes('drizzle')) {
-    score -= 25;
-    messages.push("Drizzle");
-  } else if (weatherLower.includes('fog') || weatherLower.includes('mist')) {
-    score -= 20;
-    messages.push("Poor visibility");
-  } else if (weatherLower.includes('ice') || weatherLower.includes('hail')) {
-    score -= 90;
-    messages.push("Dangerous conditions");
+  // Weather condition adjustments
+  switch (weatherMain.toLowerCase()) {
+    case 'thunderstorm':
+      score -= 60;
+      messages.push("Thunderstorm");
+      break;
+    case 'snow':
+      score -= 45;
+      messages.push("Snowing");
+      break;
+    case 'rain':
+      score -= 40;
+      messages.push("Rainy");
+      break;
+    case 'drizzle':
+      score -= 25;
+      messages.push("Drizzling");
+      break;
+    case 'fog':
+    case 'mist':
+      score -= 10;
+      messages.push("Poor visibility");
+      break;
   }
 
-  // Ensure score stays within 0-100
-  score = Math.max(0, Math.min(100, score));
+  // Ensure score doesn't go below 0
+  score = Math.max(0, score);
 
-  // Generate message based on score
-  let finalMessage = "";
-  if (score >= 80) {
-    finalMessage = "Perfect for cycling!";
-  } else if (score >= 60) {
-    finalMessage = "Good cycling conditions";
-  } else if (score >= 40) {
-    finalMessage = "Moderate conditions";
-  } else if (score >= 20) {
-    finalMessage = "Challenging conditions";
-  } else {
-    finalMessage = "Not recommended";
-  }
+  // Get the main message
+  const message = messages.length > 0 ? messages[0] : "Perfect for biking!";
 
-  // Add specific weather messages if score is not perfect
-  if (score < 80 && messages.length > 0) {
-    finalMessage += ` (${messages.join(", ")})`;
-  }
-
-  return { score, message: finalMessage };
+  return { score, message };
 }
 
-export const getWeatherForecast = async (lat: number, lon: number): Promise<WeatherForecast[]> => {
+export async function getCurrentLocation(): Promise<LocationInfo> {
   try {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      return {
+        coords: {
+          latitude: 40.7128,
+          longitude: -74.0060
+        },
+        city: 'New York'
+      };
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+    
+    // Get city name from coordinates
     const response = await axios.get(
-      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
+      `https://api.openweathermap.org/geo/1.0/reverse?lat=${location.coords.latitude}&lon=${location.coords.longitude}&limit=1&appid=${API_KEY}`
     );
 
-    // Group forecasts by day
-    const dailyForecasts = new Map<string, any>();
+    if (!response.data || response.data.length === 0) {
+      throw new Error('Failed to get city name');
+    }
+
+    return {
+      coords: {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      },
+      city: response.data[0].name
+    };
+  } catch (error) {
+    return {
+      coords: {
+        latitude: 40.7128,
+        longitude: -74.0060
+      },
+      city: 'New York'
+    };
+  }
+}
+
+export async function fetchWeatherForecast(): Promise<{ location: string; forecasts: WeatherForecast[] }> {
+  try {
+    const location = await getCurrentLocation();
     
-    // First pass: collect all data points for each day
-    response.data.list.forEach((forecast: any) => {
-      const date = new Date(forecast.dt * 1000);
-      const hours = date.getHours();
-      const dateKey = date.toLocaleDateString();
+    const response = await axios.get(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric&appid=${API_KEY}`
+    );
+
+    if (!response.data || !response.data.list) {
+      throw new Error('Invalid weather data received');
+    }
+
+    // Group forecasts by day
+    const dailyForecasts = new Map<string, any[]>();
+    
+    response.data.list.forEach((item: any) => {
+      const date = new Date(item.dt * 1000);
+      const dateKey = date.toISOString().split('T')[0]; // Use ISO date string for consistent keys
       
-      // Only consider forecasts between 8 AM and 6 PM
-      if (hours >= 8 && hours <= 18) {
-        if (!dailyForecasts.has(dateKey)) {
-          dailyForecasts.set(dateKey, {
-            date: date,
-            forecasts: [],
-          });
-        }
-        
-        dailyForecasts.get(dateKey).forecasts.push({
-          temp: forecast.main.temp,
-          temp_min: forecast.main.temp_min,
-          temp_max: forecast.main.temp_max,
-          wind_speed: forecast.wind.speed,
-          weather: forecast.weather[0],
-          precipitation: (forecast.rain?.['3h'] || 0) + (forecast.snow?.['3h'] || 0),
-          humidity: forecast.main.humidity,
-          hour: hours,
-        });
+      if (!dailyForecasts.has(dateKey)) {
+        dailyForecasts.set(dateKey, []);
       }
+      
+      dailyForecasts.get(dateKey)?.push(item);
     });
 
-    // Second pass: calculate daily averages and create final forecast objects
-    const processedForecasts = Array.from(dailyForecasts.entries()).map(([_, dayData]) => {
-      const forecasts = dayData.forecasts;
-      const date = dayData.date;
-      
-      // If no daytime forecasts available, skip this day
-      if (forecasts.length === 0) {
-        return null;
-      }
+    // Process daily forecasts
+    const forecasts = Array.from(dailyForecasts.entries())
+      .slice(0, 3)
+      .map(([dateStr, items]) => {
+        const date = new Date(dateStr + 'T00:00:00'); // Add time component for proper date parsing
+        if (isNaN(date.getTime())) {
+          console.error('Invalid date:', dateStr);
+          return null;
+        }
 
-      // Calculate averages for daytime hours
-      const avgTemp = forecasts.reduce((sum: number, f: any) => sum + f.temp, 0) / forecasts.length;
-      const avgWindSpeed = forecasts.reduce((sum: number, f: any) => sum + f.wind_speed, 0) / forecasts.length;
-      const totalPrecipitation = forecasts.reduce((sum: number, f: any) => sum + f.precipitation, 0);
-      
-      // Get min/max temperatures during daytime
-      const minTemp = Math.min(...forecasts.map((f: any) => f.temp_min));
-      const maxTemp = Math.max(...forecasts.map((f: any) => f.temp_max));
-      
-      // Get the most common weather condition during daytime
-      const weatherCounts = forecasts.reduce((acc: any, f: any) => {
-        acc[f.weather.main] = (acc[f.weather.main] || 0) + 1;
-        return acc;
-      }, {});
-      const mainWeather = Object.entries(weatherCounts)
-        .sort(([,a]: any, [,b]: any) => b - a)[0][0];
-      
-      // Get the corresponding weather description and icon
-      const weatherDetails = forecasts.find((f: any) => f.weather.main === mainWeather)?.weather;
+        const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
+        const monthDay = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+        const formattedDate = `${dayOfWeek}, ${monthDay}`;
 
-      // Format the date
-      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
-      const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const formattedDate = `${dayOfWeek}, ${monthDay}`;
+        // Calculate daily averages
+        const avgTemp = items.reduce((sum, item) => sum + item.main.temp, 0) / items.length;
+        const avgWindSpeed = items.reduce((sum, item) => sum + item.wind.speed, 0) / items.length;
+        const precipitation = items.reduce((sum, item) => {
+          const rain = item.rain ? item.rain['3h'] || 0 : 0;
+          const snow = item.snow ? item.snow['3h'] || 0 : 0;
+          return sum + rain + snow;
+        }, 0);
 
-      // Calculate biking score based on daytime conditions
-      const bikingScore = calculateBikingScore(
-        avgTemp,
-        avgWindSpeed,
-        totalPrecipitation,
-        mainWeather
-      );
+        // Get most common weather condition
+        const weatherCounts = items.reduce((acc: { [key: string]: number }, item) => {
+          const weather = item.weather[0];
+          acc[weather.main] = (acc[weather.main] || 0) + 1;
+          return acc;
+        }, {});
 
-      return {
-        date: formattedDate,
-        temp: {
-          day: avgTemp,
-          min: minTemp,
-          max: maxTemp,
-        },
-        weather: {
-          main: weatherDetails.main,
-          description: weatherDetails.description,
-          icon: weatherDetails.icon,
-        },
-        wind_speed: avgWindSpeed,
-        humidity: forecasts[0].humidity,
-        precipitation: totalPrecipitation,
-        bikingScore,
-        dayHours: `8 AM - 6 PM`,
-      };
-    }).filter(Boolean); // Remove any null entries
+        const mostCommonWeather = Object.entries(weatherCounts)
+          .sort(([, a], [, b]) => b - a)[0][0];
 
-    // Sort by date and return first 4 days
-    const currentTime = new Date();
-    const isAfter6PM = currentTime.getHours() >= 18;
-    const currentDate = currentTime.toISOString().split('T')[0];
+        const weatherInfo = items[0].weather[0];
 
-    // Filter out today's forecast if it's after 6 PM
-    return processedForecasts.filter(forecast => {
-      if (isAfter6PM) {
-        return forecast.date !== currentDate;
-      }
-      return true;
-    }).slice(0, 4);
+        const bikingScore = calculateBikingScore(
+          avgTemp,
+          avgWindSpeed,
+          precipitation,
+          mostCommonWeather
+        );
+
+        return {
+          date: formattedDate,
+          temperature: avgTemp,
+          temp: {
+            day: avgTemp,
+            min: Math.min(...items.map(item => item.main.temp_min)),
+            max: Math.max(...items.map(item => item.main.temp_max)),
+          },
+          weather: {
+            description: weatherInfo.description,
+            icon: weatherInfo.icon,
+            main: weatherInfo.main,
+          },
+          wind_speed: avgWindSpeed,
+          humidity: items[0].main.humidity,
+          precipitation: precipitation * 10, // Convert to percentage
+          bikingScore,
+          dayHours: '8 AM - 6 PM',
+        };
+      });
+
+    return {
+      location: location.city,
+      forecasts
+    };
+
   } catch (error) {
-    console.error('Error fetching weather data:', error);
-    throw error;
+    console.error('Weather error:', error);
+    throw new Error('Failed to fetch weather data');
   }
-};
-
-// Default to New York City coordinates
-export const fetchWeatherForecast = async (): Promise<WeatherForecast[]> => {
-  return getWeatherForecast(40.7128, -74.0060);
-};
+}

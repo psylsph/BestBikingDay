@@ -6,6 +6,7 @@ import { fetchWeatherForecast, WeatherForecast } from '../app/services/weatherSe
 
 export default function HomeScreen() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
+  const [location, setLocation] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   const styles = StyleSheet.create({
@@ -63,7 +64,8 @@ export default function HomeScreen() {
   const loadWeatherData = async () => {
     try {
       const data = await fetchWeatherForecast();
-      setForecasts(data);
+      setForecasts(data.forecasts);
+      setLocation(data.location);
       setError(null);
     } catch (err) {
       setError('Failed to load weather data. Please try again later.');
@@ -86,7 +88,7 @@ export default function HomeScreen() {
       <StatusBar barStyle="light-content" />
       <View style={styles.header}>
         <Text style={styles.title}>Best Biking Day</Text>
-        <Text style={styles.subtitle}>5-Day Weather Forecast</Text>
+        <Text style={styles.subtitle}>3-Day Weather Forecast • {location}</Text>
       </View>
       {forecasts.length === 0 ? (
         <View style={styles.loadingContainer}>

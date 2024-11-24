@@ -9,6 +9,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function App() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
+  const [location, setLocation] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,7 +19,8 @@ export default function App() {
   const loadWeatherData = async () => {
     try {
       const data = await fetchWeatherForecast();
-      setForecasts(data);
+      setForecasts(data.forecasts);
+      setLocation(data.location);
       setError(null);
     } catch (err) {
       setError('Failed to load weather data. Please try again later.');
@@ -43,7 +45,7 @@ export default function App() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Best Biking Day</Text>
-          <Text style={styles.subtitle}>4-Day Weather Forecast</Text>
+          <Text style={styles.subtitle}>3-Day Weather Forecast • {location}</Text>
         </View>
         
         {error ? (
