@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "WeatherApp",
-    "slug": "WeatherApp",
+    "name": "BestBikingDay",
+    "slug": "BestBikingDay",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
