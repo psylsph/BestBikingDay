@@ -1,50 +1,90 @@
-# Welcome to your Expo app 👋
+# Best Biking Day
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile application that helps cyclists plan their rides by providing detailed weather forecasts with cycling-specific scores.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 5-day weather forecast
+- Cycling condition scores (0-100)
+- Detailed weather information including temperature, wind, and precipitation
+- Dark theme with color-coded weather cards
+- Smart filtering (hides today's forecast after 6 PM)
 
-   ```bash
-   npm install
-   ```
+## Installation
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+1. Clone the repository:
 ```bash
-npm run reset-project
+git clone https://github.com/yourusername/best-biking-day.git
+cd best-biking-day
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies:
+```bash
+npm install
+```
 
-## Learn more
+3. Create a `.env` file in the root directory and add your OpenWeatherMap API key:
+```
+OPENWEATHER_API_KEY=your_api_key_here
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Start the development server:
+```bash
+npm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Building for Production
 
-## Join the community
+### Web
+```bash
+npx expo export
 
-Join our community of developers creating universal apps.
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+## Publishing
+
+1. Create an Expo account at https://expo.dev/signup
+
+2. Login to Netlify:
+```bash
+npx netlify deploy --dir dist
+```
+
+3. Configure your app in app.json:
+- Update the "owner" field
+- Set your bundle identifier/package name
+- Configure your splash screen and icons
+
+4. Build and submit:
+```bash
+eas build --platform all
+eas submit --platform ios
+eas submit --platform android
+```
+
+## Development
+
+- Built with React Native and Expo
+- TypeScript for type safety
+- OpenWeatherMap API for weather data
+- Custom scoring algorithm for cycling conditions
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- OpenWeatherMap API for weather data
+- Expo team for the amazing development platform
+- React Native community for the robust ecosystem
