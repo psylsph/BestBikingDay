@@ -82,7 +82,7 @@ export default function HomeScreen() {
 
   return (
     <LinearGradient
-      colors={['#1a1a1a', '#2d2d2d']}
+      colors={['#0d1b2a', '#1b263b']}
       style={styles.container}
     >
       <StatusBar barStyle="light-content" />
