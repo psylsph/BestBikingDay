@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
+import { OPENWEATHER_API_KEY } from '@env';
 
-const API_KEY = '56bca744a5a934f9bd410029293c23fd'; // You'll need to replace this with your OpenWeatherMap API key
+const API_KEY = OPENWEATHER_API_KEY;
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 export interface WeatherForecast {
