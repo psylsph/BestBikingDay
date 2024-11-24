@@ -24,7 +24,13 @@
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "build": {
+        "favicon": {
+          "src": "./assets/favicon.png",
+          "sizes": [16, 32, 48, 96]
+        }
+      }
     }
   }
 }
