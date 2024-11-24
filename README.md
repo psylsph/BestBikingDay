@@ -42,15 +42,17 @@ npx expo export
 ```
 
 
-
+11
 ## Publishing
 
-1. Create an Expo account at https://expo.dev/signup
+1. Create an Netlify account at https://netlify.app
 
 2. Login to Netlify:
 ```bash
 npx netlify deploy --dir dist
 ```
+
+npx netlify deploy --dir dist --prod
 
 3. Configure your app in app.json:
 - Update the "owner" field

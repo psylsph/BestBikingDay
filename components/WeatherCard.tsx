@@ -7,6 +7,9 @@ interface WeatherCardProps {
   forecast: WeatherForecast;
 }
 
+const { width: screenWidth } = Dimensions.get('window');
+const isMobile = screenWidth < 768;
+
 export default function WeatherCard({ forecast }: WeatherCardProps) {
   // Function to get score colors based on the biking score
   const getScoreColors = (score: number) => {
@@ -88,9 +91,9 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    borderRadius: 15,
-    marginVertical: 8,
-    padding: 15,
+    borderRadius: isMobile ? 12 : 15,
+    marginVertical: isMobile ? 6 : 8,
+    padding: isMobile ? 12 : 15,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -110,28 +113,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   date: {
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16,
     fontWeight: '600',
     color: '#ffffff',
-    lineHeight: 20,
+    lineHeight: isMobile ? 18 : 20,
   },
   hours: {
-    fontSize: 12,
+    fontSize: isMobile ? 10 : 12,
     color: '#ffffff99',
     marginTop: 2,
   },
   scoreSection: {
     alignItems: 'center',
-    marginVertical: 15,
+    marginVertical: isMobile ? 12 : 15,
   },
   scoreWheel: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: isMobile ? 100 : 120,
+    height: isMobile ? 100 : 120,
+    borderRadius: isMobile ? 50 : 60,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    borderWidth: 4,
+    borderWidth: isMobile ? 3 : 4,
     borderColor: '#ffffff40',
     shadowColor: '#000',
     shadowOffset: {
@@ -144,7 +147,7 @@ const styles = StyleSheet.create({
   },
   scoreNumber: {
     color: 'white',
-    fontSize: 36,
+    fontSize: isMobile ? 32 : 36,
     fontWeight: 'bold',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
   },
   scoreLabel: {
     color: 'white',
-    fontSize: 12,
+    fontSize: isMobile ? 10 : 12,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -164,8 +167,8 @@ const styles = StyleSheet.create({
   scoreNotch: {
     position: 'absolute',
     top: -2,
-    width: 4,
-    height: 12,
+    width: isMobile ? 3 : 4,
+    height: isMobile ? 10 : 12,
     backgroundColor: 'white',
     borderRadius: 2,
   },
@@ -176,50 +179,46 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   icon: {
-    width: 50,
-    height: 50,
+    width: isMobile ? 40 : 50,
+    height: isMobile ? 40 : 50,
   },
   temp: {
-    fontSize: 24,
+    fontSize: isMobile ? 20 : 24,
     fontWeight: 'bold',
-    marginHorizontal: 10,
+    marginHorizontal: isMobile ? 8 : 10,
     color: '#ffffff',
   },
   description: {
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16,
     color: '#ffffffcc',
     textTransform: 'capitalize',
   },
   bikingMessage: {
-    marginVertical: 8,
-    paddingVertical: 4,
+    marginVertical: isMobile ? 6 : 8,
+    paddingVertical: isMobile ? 3 : 4,
     borderRadius: 4,
   },
   bikingText: {
-    fontSize: 14,
+    fontSize: isMobile ? 12 : 14,
     color: '#ffffff',
     textAlign: 'center',
-    fontStyle: 'italic',
   },
   detailsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#ffffff20',
-    paddingTop: 10,
-    marginTop: 4,
+    justifyContent: 'space-between',
+    marginTop: isMobile ? 8 : 10,
   },
   details: {
     alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: isMobile ? 10 : 12,
     color: '#ffffff99',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   detailText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: isMobile ? 12 : 14,
     color: '#ffffff',
+    fontWeight: '500',
   },
 });
