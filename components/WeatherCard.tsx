@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { StyleSheet, View, Text, Image, Dimensions, Platform } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleSheet, View, Text, Image, Dimensions } from 'react-native';
 import { WeatherForecast } from '../app/services/weatherService';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -8,26 +8,11 @@ interface WeatherCardProps {
 }
 
 export default function WeatherCard({ forecast }: WeatherCardProps) {
-  const [isMobile, setIsMobile] = useState(
-    Platform.OS === 'ios' || Platform.OS === 'android' || Dimensions.get('window').width < 768
-  );
-
-  useEffect(() => {
-    const updateLayout = () => {
-      setIsMobile(
-        Platform.OS === 'ios' || Platform.OS === 'android' || Dimensions.get('window').width < 768
-      );
-    };
-
-    const subscription = Dimensions.addEventListener('change', updateLayout);
-    return () => subscription.remove();
-  }, []);
-
   const styles = useMemo(() => StyleSheet.create({
     card: {
       flex: 1,
-      borderRadius: isMobile ? 10 : 12,
-      padding: isMobile ? 8 : 10,
+      borderRadius: 12,
+      padding: 12,
       shadowColor: '#000',
       shadowOffset: {
         width: 0,
@@ -37,64 +22,94 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
       shadowRadius: 3.84,
       elevation: 5,
       backgroundColor: 'transparent',
+      minHeight: 100,
+      minWidth: 460,
     },
     contentContainer: {
       flex: 1,
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: isMobile ? 8 : 10,
+      alignItems: 'center',
+      gap: 12,
+      flexWrap: 'wrap',
     },
     leftSection: {
-      flex: 3,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      width: 160,
+      minWidth: 160,
     },
-    rightSection: {
-      flex: 2,
+    dateSection: {
+      width: 65,
+      minWidth: 65,
+    },
+    weatherSection: {
+      alignItems: 'flex-start',
+      width: 85,
+      minWidth: 85,
+    },
+    centerSection: {
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
+      minWidth: 120,
     },
-    mainInfo: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    rightSection: {
+      width: 110,
+      minWidth: 110,
+      justifyContent: 'center',
+      gap: 8,
+    },
+    scoreSection: {
       alignItems: 'center',
-      marginBottom: isMobile ? 6 : 8,
+    },
+    detailsSection: {
+      justifyContent: 'center',
+      gap: 8,
     },
     dateContainer: {
-      flex: 1,
-    },
-    date: {
-      fontSize: isMobile ? 12 : 14,
-      fontWeight: '600',
-      color: '#ffffff',
-      lineHeight: isMobile ? 16 : 18,
-    },
-    hours: {
-      fontSize: isMobile ? 10 : 11,
-      color: '#ffffff99',
-      marginTop: 1,
+      marginBottom: 6,
     },
     weatherInfo: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 8,
+      flexWrap: 'nowrap',
+    },
+    mainInfo: {
+      marginBottom: 10,
+    },
+    date: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#ffffff',
+      lineHeight: 17,
+    },
+    hours: {
+      fontSize: 10,
+      color: '#ffffff99',
+      marginTop: 1,
     },
     icon: {
-      width: isMobile ? 32 : 36,
-      height: isMobile ? 32 : 36,
+      width: 32,
+      height: 32,
     },
     temp: {
-      fontSize: isMobile ? 16 : 18,
+      fontSize: 16,
       fontWeight: 'bold',
-      marginHorizontal: isMobile ? 6 : 8,
+      marginHorizontal: 8,
       color: '#ffffff',
     },
     description: {
-      fontSize: isMobile ? 12 : 13,
+      fontSize: 12,
       color: '#ffffffcc',
       textTransform: 'capitalize',
+      maxWidth: 90,
     },
     scoreWheel: {
-      width: isMobile ? 80 : 90,
-      height: isMobile ? 80 : 90,
-      borderRadius: isMobile ? 40 : 45,
+      width: 90,
+      height: 90,
+      borderRadius: 45,
       justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
@@ -111,7 +126,7 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
     },
     scoreNumber: {
       color: 'white',
-      fontSize: isMobile ? 24 : 28,
+      fontSize: 28,
       fontWeight: 'bold',
       textShadowColor: 'rgba(0, 0, 0, 0.3)',
       textShadowOffset: { width: 0, height: 1 },
@@ -119,7 +134,7 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
     },
     scoreLabel: {
       color: 'white',
-      fontSize: isMobile ? 8 : 10,
+      fontSize: 10,
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 1,
@@ -130,41 +145,39 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
     },
     scoreNotch: {
       position: 'absolute',
-      top: -2,
+      top: -3,
       width: 2,
       height: 8,
       backgroundColor: 'white',
       borderRadius: 1,
     },
     bikingMessage: {
-      marginTop: isMobile ? 4 : 5,
-      paddingVertical: isMobile ? 2 : 3,
+      marginTop: 5,
+      paddingVertical: 3,
       borderRadius: 4,
     },
     bikingText: {
-      fontSize: isMobile ? 10 : 11,
+      fontSize: 11,
       color: '#ffffff',
       textAlign: 'center',
     },
-    detailsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: isMobile ? 6 : 8,
-    },
     details: {
+      flexDirection: 'row',
       alignItems: 'center',
+      gap: 6,
     },
     detailLabel: {
-      fontSize: isMobile ? 9 : 10,
+      fontSize: 11,
       color: '#ffffff99',
-      marginBottom: 1,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
     detailText: {
-      fontSize: isMobile ? 10 : 11,
+      fontSize: 12,
       color: '#ffffff',
       fontWeight: '500',
     },
-  }), [isMobile]);
+  }), []);
 
   // Function to get score colors based on the biking score
   const getScoreColors = (score: number) => {
@@ -179,55 +192,72 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
 
   return (
     <LinearGradient
-      colors={[colors[0] + '20', colors[1] + '40']} // Using hex alpha for transparency
+      colors={[colors[0] + '20', colors[1] + '40']}
       style={styles.card}
     >
       <View style={styles.contentContainer}>
         <View style={styles.leftSection}>
-          <View style={styles.mainInfo}>
+          <View style={styles.dateSection}>
             <View style={styles.dateContainer}>
               <Text style={styles.date}>{forecast.date}</Text>
               <Text style={styles.hours}>{forecast.dayHours}</Text>
             </View>
-            <View style={styles.weatherInfo}>
-              <Image
-                source={{ uri: `https://openweathermap.org/img/wn/${forecast.weather.icon}@2x.png` }}
-                style={styles.icon}
-              />
-              <Text style={styles.temp}>{Math.round(forecast.temp.day)}°</Text>
-              <Text style={styles.description}>{forecast.weather.description}</Text>
-            </View>
           </View>
-
-          <View style={styles.bikingMessage}>
-            <Text style={styles.bikingText}>{forecast.bikingScore.message}</Text>
-          </View>
-
-          <View style={styles.detailsContainer}>
-            <View style={styles.details}>
-              <Text style={styles.detailLabel}>Min/Max</Text>
-              <Text style={styles.detailText}>{Math.round(forecast.temp.min)}° / {Math.round(forecast.temp.max)}°</Text>
-            </View>
-            <View style={styles.details}>
-              <Text style={styles.detailLabel}>Wind</Text>
-              <Text style={styles.detailText}>{Math.round(forecast.wind_speed)} m/s</Text>
-            </View>
-            <View style={styles.details}>
-              <Text style={styles.detailLabel}>Rain/Snow</Text>
-              <Text style={styles.detailText}>{forecast.precipitation.toFixed(1)} mm</Text>
+          
+          <View style={styles.weatherSection}>
+            <View style={styles.mainInfo}>
+              <View style={styles.weatherInfo}>
+                <Image
+                  source={{ uri: `https://openweathermap.org/img/wn/${forecast.weather.icon}@2x.png` }}
+                  style={styles.icon}
+                />
+                <Text style={styles.temp}>{Math.round(forecast.temp.day)}°</Text>
+                <Text style={styles.description}>{forecast.weather.description}</Text>
+              </View>
             </View>
           </View>
         </View>
 
-        <View style={styles.rightSection}>
+        <View style={styles.centerSection}>
           <LinearGradient
             colors={colors}
             style={styles.scoreWheel}
           >
+            {[...Array(12)].map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.scoreNotch,
+                  {
+                    transform: [{ rotate: `${i * 30}deg` }],
+                    top: -3,
+                  },
+                ]}
+              />
+            ))}
             <Text style={styles.scoreNumber}>{forecast.bikingScore.score}</Text>
             <Text style={styles.scoreLabel}>{getScoreLabel(forecast.bikingScore.score)}</Text>
-            <View style={styles.scoreNotch} />
           </LinearGradient>
+          <View style={[styles.bikingMessage, { backgroundColor: colors[0] + '40' }]}>
+            <Text style={styles.bikingText}>{forecast.bikingScore.message}</Text>
+          </View>
+        </View>
+
+        <View style={styles.rightSection}>
+          <View style={styles.detailsSection}>
+            <View style={styles.details}>
+              <Text style={styles.detailLabel}>WIND</Text>
+              <Text style={styles.detailText}>{Math.round(forecast.wind_speed)} km/h</Text>
+            </View>
+            <View style={styles.details}>
+              <Text style={styles.detailLabel}>HUMIDITY</Text>
+              <Text style={styles.detailText}>{forecast.humidity}%</Text>
+            </View>
+            <View style={styles.details}>
+              <Text style={styles.detailLabel}>RAIN</Text>
+              <Text style={styles.detailText}>{Math.round(forecast.precipitation)}%</Text>
+            </View>
+          </View>
         </View>
       </View>
     </LinearGradient>
