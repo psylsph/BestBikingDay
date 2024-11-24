@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, StatusBar, Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useFonts } from 'expo-font';
 import WeatherCard from './components/WeatherCard';
 import { fetchWeatherForecast, WeatherForecast } from './app/services/weatherService';
 
@@ -11,6 +12,12 @@ export default function App() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [location, setLocation] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+
+  const [fontsLoaded] = useFonts({
+    'Inter-Bold': require('./assets/fonts/Inter-Bold.otf'),
+    'Inter-SemiBold': require('./assets/fonts/Inter-SemiBold.otf'),
+    'Inter-Regular': require('./assets/fonts/Inter-Regular.otf'),
+  });
 
   useEffect(() => {
     loadWeatherData();
@@ -33,6 +40,10 @@ export default function App() {
       // Handle scroll if needed
     },
   });
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -84,15 +95,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 36,
+    fontFamily: 'Inter-Bold',
     color: '#ffffff',
     textAlign: 'left',
+    letterSpacing: -1.2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
     color: '#e3f2fd',
-    marginTop: 4,
+    letterSpacing: 0.2,
+    lineHeight: 22,
   },
   cardsContainer: {
     padding: 12,
@@ -108,6 +124,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#ff6b6b',
     fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
     textAlign: 'center',
   },
 });
