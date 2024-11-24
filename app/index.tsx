@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, StatusBar } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import WeatherCard from './components/WeatherCard';
-import { fetchWeatherForecast, WeatherForecast } from './app/services/weatherService';
+import WeatherCard from '../components/WeatherCard';
+import { fetchWeatherForecast, WeatherForecast } from '../app/services/weatherService';
 
-export default function App() {
+export default function HomeScreen() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,16 +32,11 @@ export default function App() {
     content: {
       flex: 1,
       padding: 12,
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      alignItems: 'stretch',
+      flexDirection: 'column',
       gap: 12,
     },
     cardWrapper: {
-      flex: 1,
-      minWidth: '19%',
-      maxWidth: '19%',
+      width: '100%',
     },
     errorContainer: {
       flex: 1,
@@ -53,6 +48,11 @@ export default function App() {
       color: '#ff6b6b',
       fontSize: 16,
       textAlign: 'center',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 
@@ -70,6 +70,14 @@ export default function App() {
     }
   };
 
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <LinearGradient
       colors={['#1a1a1a', '#2d2d2d']}
@@ -80,9 +88,9 @@ export default function App() {
         <Text style={styles.title}>Best Biking Day</Text>
         <Text style={styles.subtitle}>5-Day Weather Forecast</Text>
       </View>
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+      {forecasts.length === 0 ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#ffffff" />
         </View>
       ) : (
         <View style={styles.content}>

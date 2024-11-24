@@ -250,3 +250,8 @@ export const getWeatherForecast = async (lat: number, lon: number): Promise<Weat
     throw error;
   }
 };
+
+// Default to New York City coordinates
+export const fetchWeatherForecast = async (): Promise<WeatherForecast[]> => {
+  return getWeatherForecast(40.7128, -74.0060);
+};

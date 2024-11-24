@@ -54,17 +54,6 @@ npx netlify deploy --dir dist
 
 npx netlify deploy --dir dist --prod
 
-3. Configure your app in app.json:
-- Update the "owner" field
-- Set your bundle identifier/package name
-- Configure your splash screen and icons
-
-4. Build and submit:
-```bash
-eas build --platform all
-eas submit --platform ios
-eas submit --platform android
-```
 
 ## Development
 
