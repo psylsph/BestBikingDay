@@ -4,7 +4,7 @@ A React Native web application that helps cyclists find the best days for biking
 
 ## Features 🌟
 
-- 5-day weather forecast with cycling-specific scores
+- 3-Day Weather Forecast with cycling-specific scores
 - Detailed weather conditions (temperature, wind, humidity, precipitation)
 - Color-coded scoring system for biking conditions
 - Responsive design that works across all devices

@@ -233,7 +233,7 @@ export const getWeatherForecast = async (lat: number, lon: number): Promise<Weat
       };
     }).filter(Boolean); // Remove any null entries
 
-    // Sort by date and return first 4 days
+    // Sort by date and return first 3 days
     const currentTime = new Date();
     const isAfter6PM = currentTime.getHours() >= 18;
     const currentDate = currentTime.toISOString().split('T')[0];
@@ -244,7 +244,7 @@ export const getWeatherForecast = async (lat: number, lon: number): Promise<Weat
         return forecast.date !== currentDate;
       }
       return true;
-    }).slice(0, 4);
+    }).slice(0, 3);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     throw error;

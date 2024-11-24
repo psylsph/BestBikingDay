@@ -20,7 +20,6 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
 
   const styles = StyleSheet.create({
     card: {
-      backgroundColor: '#2d2d2d',
       borderRadius: 12,
       padding: 16,
       elevation: 3,
@@ -35,8 +34,10 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
       justifyContent: 'space-between',
     },
     leftSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flex: 1,
+      maxWidth: '40%',
+    },
+    mainInfo: {
       gap: 8,
     },
     dateContainer: {
@@ -54,6 +55,7 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
     weatherInfo: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 8,
     },
     icon: {
       width: 32,
@@ -63,19 +65,49 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
       fontSize: 16,
       fontWeight: 'bold',
       color: '#ffffff',
-      marginLeft: 4,
     },
     description: {
       fontSize: 12,
       color: '#ffffffcc',
       textTransform: 'capitalize',
     },
+    scoreSection: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scoreWheel: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 3,
+      borderColor: '#ffffff40',
+    },
+    scoreNumber: {
+      color: 'white',
+      fontSize: 32,
+      fontWeight: 'bold',
+    },
+    scoreLabel: {
+      color: 'white',
+      fontSize: 11,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginTop: 2,
+    },
     detailsSection: {
+      flex: 1,
+      maxWidth: '30%',
+      gap: 4,
       alignItems: 'flex-end',
     },
     details: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'flex-end',
       gap: 4,
     },
     detailLabel: {
@@ -87,32 +119,6 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
       color: '#ffffff',
       fontWeight: '500',
     },
-    scoreSection: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-    },
-    scoreWheel: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: '#ffffff40',
-    },
-    scoreNumber: {
-      color: 'white',
-      fontSize: 20,
-      fontWeight: 'bold',
-    },
-    scoreLabel: {
-      color: 'white',
-      fontSize: 9,
-      fontWeight: '600',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
   });
 
   return (
@@ -122,7 +128,7 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
     >
       <View style={styles.contentContainer}>
         <View style={styles.leftSection}>
-          <View>
+          <View style={styles.mainInfo}>
             <View style={styles.dateContainer}>
               <Text style={styles.date}>{forecast.date}</Text>
               <Text style={styles.hours}>{forecast.dayHours}</Text>

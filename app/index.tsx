@@ -86,7 +86,7 @@ export default function HomeScreen() {
       <StatusBar barStyle="light-content" />
       <View style={styles.header}>
         <Text style={styles.title}>Best Biking Day</Text>
-        <Text style={styles.subtitle}>5-Day Weather Forecast</Text>
+        <Text style={styles.subtitle}>3-Day Weather Forecast</Text>
       </View>
       {forecasts.length === 0 ? (
         <View style={styles.loadingContainer}>

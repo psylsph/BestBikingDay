@@ -43,7 +43,7 @@ export default function App() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Best Biking Day</Text>
-          <Text style={styles.subtitle}>4-Day Weather Forecast</Text>
+          <Text style={styles.subtitle}>3-Day Weather Forecast</Text>
         </View>
         
         {error ? (
