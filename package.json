@@ -14,7 +14,7 @@
     "lint": "expo lint",
     "build": "npm run build:web && npm run build:functions",
     "build:web": "npx expo export -p web",
-    "build:functions": "netlify-lambda build netlify/functions"
+    "build:functions": "netlify-lambda build netlify/functions -o functions-build"
   },
   "jest": {
     "preset": "jest-expo"
