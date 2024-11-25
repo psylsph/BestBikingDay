@@ -353,17 +353,19 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
 
       console.log('Generated hourly forecasts:', hourlyForecasts);
 
-      // Get the top 3 best cycling hours
+      // Get the top 3 best cycling hours while preserving time order
       const bestHours = hourlyForecasts
+        .map((forecast, index) => ({ ...forecast, originalIndex: index }))
         .sort((a, b) => b.score - a.score)
         .slice(0, 3)
+        .sort((a, b) => a.originalIndex - b.originalIndex)
         .map(forecast => ({
           time: forecast.time,
           score: forecast.score,
           temperature: forecast.temperature
         }));
 
-      console.log('Best cycling hours:', bestHours);
+      console.log('Best cycling hours (in time order):', bestHours);
 
       const bikingScore = calculateBikingScore(
         items[0].main.temp,
