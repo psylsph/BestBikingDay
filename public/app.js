@@ -1,6 +1,6 @@
 async function fetchWeatherData() {
     try {
-        const response = await fetch('/api/forecast');
+        const response = await fetch('/.netlify/functions/forecast');
         const data = await response.json();
         return data;
     } catch (error) {
