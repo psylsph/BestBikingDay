@@ -27,6 +27,7 @@ export interface WeatherForecast {
   sunrise: string;
   sunset: string;
   hourlyForecasts: HourlyForecast[];
+  bestHours: BestHour[];
 }
 
 export interface HourlyForecast {
@@ -37,6 +38,12 @@ export interface HourlyForecast {
   windSpeed: number;
   precipitation: number;
   description: string;
+}
+
+export interface BestHour {
+  time: string;
+  score: number;
+  temperature: number;
 }
 
 interface LocationInfo {
@@ -251,7 +258,11 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
     
     forecastResponse.data.list.forEach((item: any) => {
       const date = new Date(item.dt * 1000);
-      const dateKey = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      const dateKey = date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
       
       if (!dailyForecasts.has(dateKey)) {
         dailyForecasts.set(dateKey, []);
@@ -261,21 +272,24 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
 
     // Process each day's forecast
     const forecasts: WeatherForecast[] = [];
+    const now = new Date();
+    const currentSunset = new Date(currentResponse.data.sys.sunset * 1000);
     
     for (const [date, items] of dailyForecasts) {
       if (forecasts.length >= 3) break; // Only show 3 days
 
-      const dayData = items[0];
-      const temps = items.map(item => item.main.temp);
-      const precipitation = items.some(item => 
-        item.rain?.['3h'] || item.snow?.['3h'] || 
-        item.weather[0].main.toLowerCase().includes('rain') ||
-        item.weather[0].main.toLowerCase().includes('snow')
-      ) ? 100 : 0;
-
       // Get the first timestamp for this day
       const dayStart = new Date(items[0].dt * 1000);
       dayStart.setHours(0, 0, 0, 0);
+
+      // Skip today if it's after sunset
+      if (dayStart.getDate() === now.getDate() && 
+          dayStart.getMonth() === now.getMonth() && 
+          dayStart.getFullYear() === now.getFullYear() && 
+          now > currentSunset) {
+        console.log('Skipping today as it is after sunset');
+        continue;
+      }
 
       // Calculate sunrise and sunset times for this specific day
       const daysSinceToday = Math.round((dayStart.getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
@@ -339,30 +353,50 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
 
       console.log('Generated hourly forecasts:', hourlyForecasts);
 
+      // Get the top 3 best cycling hours
+      const bestHours = hourlyForecasts
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(forecast => ({
+          time: forecast.time,
+          score: forecast.score,
+          temperature: forecast.temperature
+        }));
+
+      console.log('Best cycling hours:', bestHours);
+
       const bikingScore = calculateBikingScore(
-        dayData.main.temp,
-        dayData.wind.speed,
-        precipitation,
-        dayData.weather[0].main
+        items[0].main.temp,
+        items[0].wind.speed,
+        items.some(item => 
+          item.rain?.['3h'] || item.snow?.['3h'] || 
+          item.weather[0].main.toLowerCase().includes('rain') ||
+          item.weather[0].main.toLowerCase().includes('snow')
+        ) ? 100 : 0,
+        items[0].weather[0].main
       );
 
       forecasts.push({
         date,
         forecastTime,
-        temperature: Math.round(dayData.main.temp),
+        temperature: Math.round(items[0].main.temp),
         temp: {
-          day: Math.round(dayData.main.temp),
-          min: Math.round(Math.min(...temps)),
-          max: Math.round(Math.max(...temps))
+          day: Math.round(items[0].main.temp),
+          min: Math.round(Math.min(...items.map(item => item.main.temp))),
+          max: Math.round(Math.max(...items.map(item => item.main.temp)))
         },
         weather: {
-          description: dayData.weather[0].description,
-          icon: dayData.weather[0].icon,
-          main: dayData.weather[0].main
+          description: items[0].weather[0].description,
+          icon: items[0].weather[0].icon,
+          main: items[0].weather[0].main
         },
-        wind_speed: Math.round(dayData.wind.speed * 3.6), // Convert m/s to km/h
-        uvi: dayData.uvi || 0,
-        precipitation,
+        wind_speed: Math.round(items[0].wind.speed * 3.6), // Convert m/s to km/h
+        uvi: items[0].uvi || 0,
+        precipitation: items.some(item => 
+          item.rain?.['3h'] || item.snow?.['3h'] || 
+          item.weather[0].main.toLowerCase().includes('rain') ||
+          item.weather[0].main.toLowerCase().includes('snow')
+        ) ? 100 : 0,
         bikingScore,
         sunrise: sunriseDate.toLocaleTimeString('en-US', { 
           hour: 'numeric', 
@@ -374,7 +408,8 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
           minute: '2-digit',
           hour12: true 
         }),
-        hourlyForecasts
+        hourlyForecasts,
+        bestHours
       });
     }
 

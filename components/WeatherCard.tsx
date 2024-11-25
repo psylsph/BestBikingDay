@@ -167,6 +167,33 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
       justifyContent: 'flex-end',
       gap: 8,
     },
+    bestHours: {
+      marginTop: 8,
+      gap: 4,
+    },
+    bestHourItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      borderRadius: 8,
+      padding: 4,
+    },
+    bestHourTime: {
+      color: '#ffffff',
+      fontSize: 12,
+      marginRight: 8,
+    },
+    bestHourScore: {
+      borderRadius: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    bestHourScoreText: {
+      color: '#ffffff',
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
   });
 
   return (
@@ -201,12 +228,25 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
 
             <View style={styles.scoreSection}>
               <LinearGradient
-                colors={colors}
+                colors={getScoreColors(forecast.bikingScore.score)}
                 style={styles.scoreWheel}
               >
                 <Text style={styles.scoreNumber}>{forecast.bikingScore.score}</Text>
                 <Text style={styles.scoreLabel}>Score</Text>
               </LinearGradient>
+              <View style={styles.bestHours}>
+                {forecast.bestHours.map((hour, index) => (
+                  <View key={index} style={styles.bestHourItem}>
+                    <Text style={styles.bestHourTime}>{hour.time}</Text>
+                    <LinearGradient
+                      colors={getScoreColors(hour.score)}
+                      style={styles.bestHourScore}
+                    >
+                      <Text style={styles.bestHourScoreText}>{hour.score}</Text>
+                    </LinearGradient>
+                  </View>
+                ))}
+              </View>
             </View>
 
             <View style={styles.detailsSection}>
