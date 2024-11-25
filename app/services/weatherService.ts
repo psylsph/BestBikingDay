@@ -26,6 +26,17 @@ export interface WeatherForecast {
   };
   sunrise: string;
   sunset: string;
+  hourlyForecasts: HourlyForecast[];
+}
+
+export interface HourlyForecast {
+  time: string;
+  score: number;
+  message: string;
+  temperature: number;
+  windSpeed: number;
+  precipitation: number;
+  description: string;
 }
 
 interface LocationInfo {
@@ -235,109 +246,137 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
       hour12: true
     });
 
-    // Get sunrise and sunset times
-    const sunrise = new Date(currentResponse.data.sys.sunrise * 1000);
-    const sunset = new Date(currentResponse.data.sys.sunset * 1000);
-
-    const formatTime = (date: Date) => {
-      return date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      });
-    };
-
     // Group forecasts by day
     const dailyForecasts = new Map<string, any[]>();
     
     forecastResponse.data.list.forEach((item: any) => {
       const date = new Date(item.dt * 1000);
-      const dateKey = date.toISOString().split('T')[0];
+      const dateKey = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
       
       if (!dailyForecasts.has(dateKey)) {
         dailyForecasts.set(dateKey, []);
       }
-      
       dailyForecasts.get(dateKey)?.push(item);
     });
 
-    // Process daily forecasts
-    const forecasts = Array.from(dailyForecasts.entries())
-      .slice(0, 3)
-      .map(([dateStr, items]) => {
-        const date = new Date(dateStr);
-        
-        // Adjust sunrise/sunset times for each forecast day
-        const daysSinceToday = Math.round((date.getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-        const forecastSunrise = new Date(sunrise.getTime() + daysSinceToday * 24 * 60 * 60 * 1000);
-        const forecastSunset = new Date(sunset.getTime() + daysSinceToday * 24 * 60 * 60 * 1000);
+    // Process each day's forecast
+    const forecasts: WeatherForecast[] = [];
+    
+    for (const [date, items] of dailyForecasts) {
+      if (forecasts.length >= 3) break; // Only show 3 days
 
-        // Calculate daily averages
-        const avgTemp = items.reduce((sum, item) => sum + item.main.temp, 0) / items.length;
-        const avgWindSpeed = items.reduce((sum, item) => sum + item.wind.speed, 0) / items.length;
-        const precipitation = items.reduce((sum, item) => {
-          const pop = item.pop || 0; // Probability of precipitation
-          return Math.max(sum, pop);
-        }, 0);
+      const dayData = items[0];
+      const temps = items.map(item => item.main.temp);
+      const precipitation = items.some(item => 
+        item.rain?.['3h'] || item.snow?.['3h'] || 
+        item.weather[0].main.toLowerCase().includes('rain') ||
+        item.weather[0].main.toLowerCase().includes('snow')
+      ) ? 100 : 0;
 
-        // Get most common weather condition
-        const weatherCounts = items.reduce((acc: { [key: string]: number }, item) => {
-          const weather = item.weather[0];
-          acc[weather.main] = (acc[weather.main] || 0) + 1;
-          return acc;
-        }, {});
+      // Get the first timestamp for this day
+      const dayStart = new Date(items[0].dt * 1000);
+      dayStart.setHours(0, 0, 0, 0);
 
-        const mostCommonWeather = Object.entries(weatherCounts)
-          .sort(([, a], [, b]) => b - a)[0][0];
+      // Calculate sunrise and sunset times for this specific day
+      const daysSinceToday = Math.round((dayStart.getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
+      const baseSunrise = new Date(currentResponse.data.sys.sunrise * 1000);
+      const baseSunset = new Date(currentResponse.data.sys.sunset * 1000);
+      
+      const sunriseDate = new Date(baseSunrise.getTime() + daysSinceToday * 24 * 60 * 60 * 1000);
+      const sunsetDate = new Date(baseSunset.getTime() + daysSinceToday * 24 * 60 * 60 * 1000);
 
-        const weatherInfo = items[0].weather[0];
+      console.log('Processing forecasts for date:', date);
+      console.log('Day start:', dayStart.toLocaleString());
+      console.log('Days since today:', daysSinceToday);
+      console.log('Sunrise:', sunriseDate.toLocaleString());
+      console.log('Sunset:', sunsetDate.toLocaleString());
+      console.log('Total forecast items:', items.length);
 
-        // Estimate UV index based on weather conditions and cloud cover
-        let baseUVI = 6; // Default moderate-high UV index
-        const clouds = items.reduce((sum, item) => sum + item.clouds.all, 0) / items.length;
-        
-        // Reduce UV based on cloud cover
-        baseUVI *= (1 - clouds / 200); // clouds.all is percentage, we want less impact
-        
-        // Adjust based on weather conditions
-        if (mostCommonWeather === 'Rain' || mostCommonWeather === 'Snow') {
-          baseUVI *= 0.5;
-        } else if (mostCommonWeather === 'Clouds') {
-          baseUVI *= 0.7;
-        }
-        
-        // Ensure UV index is within bounds
-        const uvi = Math.max(1, Math.min(11, Math.round(baseUVI)));
-
-        const bikingScore = calculateBikingScore(
-          avgTemp,
-          avgWindSpeed,
-          precipitation * 100,
-          mostCommonWeather
-        );
-
-        return {
-          date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-          forecastTime,
-          temperature: avgTemp,
-          temp: {
-            day: avgTemp,
-            min: Math.min(...items.map(item => item.main.temp_min)),
-            max: Math.max(...items.map(item => item.main.temp_max)),
-          },
-          weather: {
-            description: weatherInfo.description,
-            icon: weatherInfo.icon,
-            main: weatherInfo.main,
-          },
-          wind_speed: avgWindSpeed,
-          uvi,
-          precipitation: precipitation * 100,
-          bikingScore,
-          sunrise: formatTime(forecastSunrise),
-          sunset: formatTime(forecastSunset),
-        };
+      // Process hourly forecasts between sunrise and sunset
+      const hourlyForecasts: HourlyForecast[] = [];
+      
+      // Find the closest forecast time to sunrise
+      const startIndex = items.findIndex(item => {
+        const itemTime = new Date(item.dt * 1000);
+        return itemTime >= sunriseDate;
       });
+
+      console.log('Start index:', startIndex);
+
+      if (startIndex !== -1) {
+        for (let i = startIndex; i < items.length; i++) {
+          const itemTime = new Date(items[i].dt * 1000);
+          
+          // Stop if we've passed sunset
+          if (itemTime > sunsetDate) {
+            console.log('Reached sunset at index:', i);
+            break;
+          }
+
+          // Include all hourly forecasts
+          const hourlyScore = calculateBikingScore(
+            items[i].main.temp,
+            items[i].wind.speed,
+            items[i].rain?.['3h'] || items[i].snow?.['3h'] ? 100 : 0,
+            items[i].weather[0].main
+          );
+
+          hourlyForecasts.push({
+            time: itemTime.toLocaleTimeString('en-US', { 
+              hour: 'numeric', 
+              minute: '2-digit',
+              hour12: true 
+            }),
+            score: hourlyScore.score,
+            message: hourlyScore.message,
+            temperature: Math.round(items[i].main.temp),
+            windSpeed: Math.round(items[i].wind.speed * 3.6), // Convert m/s to km/h
+            precipitation: items[i].rain?.['3h'] || items[i].snow?.['3h'] ? 100 : 0,
+            description: items[i].weather[0].description
+          });
+        }
+      }
+
+      console.log('Generated hourly forecasts:', hourlyForecasts);
+
+      const bikingScore = calculateBikingScore(
+        dayData.main.temp,
+        dayData.wind.speed,
+        precipitation,
+        dayData.weather[0].main
+      );
+
+      forecasts.push({
+        date,
+        forecastTime,
+        temperature: Math.round(dayData.main.temp),
+        temp: {
+          day: Math.round(dayData.main.temp),
+          min: Math.round(Math.min(...temps)),
+          max: Math.round(Math.max(...temps))
+        },
+        weather: {
+          description: dayData.weather[0].description,
+          icon: dayData.weather[0].icon,
+          main: dayData.weather[0].main
+        },
+        wind_speed: Math.round(dayData.wind.speed * 3.6), // Convert m/s to km/h
+        uvi: dayData.uvi || 0,
+        precipitation,
+        bikingScore,
+        sunrise: sunriseDate.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        }),
+        sunset: sunsetDate.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        }),
+        hourlyForecasts
+      });
+    }
 
     return {
       location: location.city,

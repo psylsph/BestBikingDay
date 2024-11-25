@@ -1,13 +1,16 @@
-import React from 'react';
-import { StyleSheet, View, Text, Image } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { WeatherForecast } from '../app/services/weatherService';
+import HourlyScoresModal from './HourlyScoresModal';
 
 interface WeatherCardProps {
   forecast: WeatherForecast;
 }
 
 export default function WeatherCard({ forecast }: WeatherCardProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+
   const getScoreColors = (score: number) => {
     if (score >= 80) return ['#4CAF50', '#388E3C'];
     if (score >= 60) return ['#8BC34A', '#689F38'];
@@ -167,66 +170,77 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
   });
 
   return (
-    <LinearGradient
-      colors={[colors[0] + '20', colors[1] + '40']}
-      style={styles.card}
-    >
-      <View style={styles.contentContainer}>
-        <View style={styles.leftSection}>
-          <View style={styles.mainInfo}>
-            <View style={styles.dateContainer}>
-              <Text style={styles.date}>{forecast.date}</Text>
-              <View style={styles.sunTimes}>
-                <Text style={styles.sunIcon}>🌅</Text>
-                <Text style={styles.sunTime}>{forecast.sunrise}</Text>
-                <Text style={styles.sunIcon}>🌇</Text>
-                <Text style={styles.sunTime}>{forecast.sunset}</Text>
+    <>
+      <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <LinearGradient
+          colors={['#0d1b2a', '#1b263b']}
+          style={styles.card}
+        >
+          <View style={styles.contentContainer}>
+            <View style={styles.leftSection}>
+              <View style={styles.mainInfo}>
+                <View style={styles.dateContainer}>
+                  <Text style={styles.date}>{forecast.date}</Text>
+                  <View style={styles.sunTimes}>
+                    <Text style={styles.sunIcon}>🌅</Text>
+                    <Text style={styles.sunTime}>{forecast.sunrise}</Text>
+                    <Text style={styles.sunIcon}>🌇</Text>
+                    <Text style={styles.sunTime}>{forecast.sunset}</Text>
+                  </View>
+                </View>
+                <View style={styles.weatherInfo}>
+                  <Image
+                    source={{ uri: `https://openweathermap.org/img/wn/${forecast.weather.icon}@2x.png` }}
+                    style={styles.icon}
+                  />
+                  <Text style={styles.temp}>{Math.round(forecast.temp.day)}°</Text>
+                </View>
+                <Text style={styles.description}>{forecast.weather.description}</Text>
               </View>
             </View>
-            <View style={styles.weatherInfo}>
-              <Image
-                source={{ uri: `https://openweathermap.org/img/wn/${forecast.weather.icon}@2x.png` }}
-                style={styles.icon}
-              />
-              <Text style={styles.temp}>{Math.round(forecast.temp.day)}°</Text>
+
+            <View style={styles.scoreSection}>
+              <LinearGradient
+                colors={colors}
+                style={styles.scoreWheel}
+              >
+                <Text style={styles.scoreNumber}>{forecast.bikingScore.score}</Text>
+                <Text style={styles.scoreLabel}>Score</Text>
+              </LinearGradient>
             </View>
-            <Text style={styles.description}>{forecast.weather.description}</Text>
-          </View>
-        </View>
 
-        <View style={styles.scoreSection}>
-          <LinearGradient
-            colors={colors}
-            style={styles.scoreWheel}
-          >
-            <Text style={styles.scoreNumber}>{forecast.bikingScore.score}</Text>
-            <Text style={styles.scoreLabel}>Score</Text>
-          </LinearGradient>
-        </View>
-
-        <View style={styles.detailsSection}>
-          <View style={styles.detailRow}>
-          <Text style={styles.detailText}>
-              {Math.round(forecast.wind_speed)} m/s
-            </Text>
-            <Text style={styles.detailIcon}>💨</Text>
-          </View>
-          <View style={styles.detailRow}>
-          <Text style={[styles.detailText, { color: getUVIColor(forecast.uvi) }]}>
-              UV {getUVIDescription(forecast.uvi)}
-            </Text>
-            <Text style={styles.detailIcon}>☀️</Text>
-          </View>
-          {forecast.precipitation > 0 && (
-            <View style={styles.detailRow}>
+            <View style={styles.detailsSection}>
+              <View style={styles.detailRow}>
               <Text style={styles.detailText}>
-                {Math.round(forecast.precipitation)}%
-              </Text>
-              <Text style={styles.detailIcon}>🌧️</Text>
+                  {Math.round(forecast.wind_speed)} m/s
+                </Text>
+                <Text style={styles.detailIcon}>💨</Text>
+              </View>
+              <View style={styles.detailRow}>
+              <Text style={[styles.detailText, { color: getUVIColor(forecast.uvi) }]}>
+                  UV {getUVIDescription(forecast.uvi)}
+                </Text>
+                <Text style={styles.detailIcon}>☀️</Text>
+              </View>
+              {forecast.precipitation > 0 && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailText}>
+                    {Math.round(forecast.precipitation)}%
+                  </Text>
+                  <Text style={styles.detailIcon}>🌧️</Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
-      </View>
-    </LinearGradient>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+
+      <HourlyScoresModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        date={forecast.date}
+        hourlyScores={forecast.hourlyForecasts}
+      />
+    </>
   );
 }
