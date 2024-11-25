@@ -36,7 +36,7 @@ interface LocationInfo {
   city: string;
 }
 
-function calculateBikingScore(temp: number, windSpeed: number, precipitation: number, weatherMain: string) {
+const calculateBikingScore = (temp: number, windSpeed: number, precipitation: number, weatherMain: string): { score: number; message: string } => {
   let score = 100;
   let messages: string[] = [];
 
@@ -116,7 +116,7 @@ function calculateBikingScore(temp: number, windSpeed: number, precipitation: nu
   return { score, message };
 }
 
-export async function getCurrentLocation(): Promise<LocationInfo> {
+const getCurrentLocation = async (): Promise<LocationInfo> => {
   let permissionError = false;
   
   try {
@@ -166,7 +166,6 @@ export async function getCurrentLocation(): Promise<LocationInfo> {
       throw new Error('Failed to get location coordinates');
     }
 
-    // Return coordinates only - we'll get the city name from OpenWeatherMap
     return {
       coords: {
         latitude: location.coords.latitude,
@@ -182,9 +181,9 @@ export async function getCurrentLocation(): Promise<LocationInfo> {
     console.error('Location error:', error, errorMessage);
     throw new Error(errorMessage);
   }
-}
+};
 
-export async function fetchWeatherForecast(): Promise<{ location: string; forecasts: WeatherForecast[]; forecastTime: string }> {
+const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: WeatherForecast[]; forecastTime: string }> => {
   let location;
   let usingFallback = false;
 
@@ -346,7 +345,15 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
       forecastTime,
     };
   } catch (error) {
-    console.error('Weather error:', error);
-    throw new Error('Failed to fetch weather data');
+    console.error('Weather API error:', error);
+    throw new Error('Failed to fetch weather data. Please try again later.');
   }
-}
+};
+
+const weatherService = {
+  fetchWeatherForecast,
+  calculateBikingScore
+};
+
+export default weatherService;
+export { fetchWeatherForecast, calculateBikingScore };

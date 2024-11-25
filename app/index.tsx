@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, ActivityIndicator, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import WeatherCard from '../components/WeatherCard';
-import { fetchWeatherForecast, WeatherForecast } from '../app/services/weatherService';
+import weatherService, { WeatherForecast } from './services/weatherService';
 
 export default function HomeScreen() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
@@ -66,7 +66,7 @@ export default function HomeScreen() {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchWeatherForecast();
+      const data = await weatherService.fetchWeatherForecast();
       setForecasts(data.forecasts);
       setLocation(data.location);
       setError(null);
