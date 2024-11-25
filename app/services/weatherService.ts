@@ -367,16 +367,34 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
 
       console.log('Best cycling hours (in time order):', bestHours);
 
-      // Use the highest score of the day as the summary score
-      const bestScore = Math.max(...hourlyForecasts.map(f => f.score));
-      const bestScoreHour = hourlyForecasts.find(f => f.score === bestScore)!;
+      // Calculate the average score for the day
+      const averageScore = Math.round(
+        hourlyForecasts.reduce((sum, f) => sum + f.score, 0) / hourlyForecasts.length
+      );
+
+      // Get the conditions that are most common during the day
+      const typicalConditions = {
+        temperature: Math.round(
+          items.reduce((sum, item) => sum + item.main.temp, 0) / items.length
+        ),
+        windSpeed: Math.round(
+          items.reduce((sum, item) => sum + item.wind.speed, 0) / items.length
+        ),
+        precipitation: items.some(item => 
+          item.rain?.['3h'] || item.snow?.['3h'] || 
+          item.weather[0].main.toLowerCase().includes('rain') ||
+          item.weather[0].main.toLowerCase().includes('snow')
+        ) ? 100 : 0,
+        description: items[0].weather[0].main // Use the main weather condition from the first forecast
+      };
+
       const bikingScore = {
-        score: bestScore,
+        score: averageScore,
         message: calculateBikingScore(
-          bestScoreHour.temperature,
-          bestScoreHour.windSpeed / 3.6, // Convert back to m/s for calculation
-          bestScoreHour.precipitation,
-          bestScoreHour.description
+          typicalConditions.temperature,
+          typicalConditions.windSpeed,
+          typicalConditions.precipitation,
+          typicalConditions.description
         ).message
       };
 
@@ -396,11 +414,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
         },
         wind_speed: Math.round(items[0].wind.speed * 3.6),
         uvi: items[0].uvi || 0,
-        precipitation: items.some(item => 
-          item.rain?.['3h'] || item.snow?.['3h'] || 
-          item.weather[0].main.toLowerCase().includes('rain') ||
-          item.weather[0].main.toLowerCase().includes('snow')
-        ) ? 100 : 0,
+        precipitation: typicalConditions.precipitation,
         bikingScore,
         sunrise: sunriseDate.toLocaleTimeString('en-US', { 
           hour: 'numeric', 
