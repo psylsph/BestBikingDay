@@ -2,7 +2,7 @@
   "name": "best-biking-day",
   "version": "1.0.0",
   "description": "A weather app that helps you find the best time to go cycling",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",

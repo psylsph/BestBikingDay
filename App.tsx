@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, StatusBar, Dimensions, Platform, ScrollView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { useFonts } from 'expo-font';
 import { fetchWeatherForecast, WeatherForecast } from './app/services/weatherService';
 import HomeScreen from './app/index';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -10,14 +9,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export default function App() {
+function App() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [location, setLocation] = useState<string>('');
   const [forecastTime, setForecastTime] = useState<string>('');
-
-  const [fontsLoaded] = useFonts({
-    'Inter-Bold': require('./assets/fonts/Inter-Bold.ttf'),
-  });
 
   useEffect(() => {
     const loadForecast = async () => {
@@ -38,10 +33,6 @@ export default function App() {
     'worklet';
     // Handle scroll events if needed
   });
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   const ScrollComponent = Platform.select({
     web: ScrollView,
@@ -99,3 +90,24 @@ const styles = StyleSheet.create({
     } : {}),
   },
 });
+
+let AppEntryPoint = App;
+
+// Add web-specific initialization
+if (Platform.OS === 'web') {
+  AppEntryPoint = () => {
+    useEffect(() => {
+      // Ensure the root element exists
+      const rootElement = document.getElementById('root');
+      if (!rootElement) {
+        const root = document.createElement('div');
+        root.id = 'root';
+        document.body.appendChild(root);
+      }
+    }, []);
+
+    return <App />;
+  };
+}
+
+export default AppEntryPoint;

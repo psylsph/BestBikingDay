@@ -26,14 +26,12 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "build": {
-        "babel": {
-          "include": ["expo-router"]
-        }
-      }
+      "output": "single",
+      "template": "./app/index.html"
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "scheme": "bestbikingday"
   }
 }
