@@ -25,12 +25,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
+      "bundler": "metro",
       "build": {
-        "favicon": {
-          "src": "./assets/favicon.png",
-          "sizes": [16, 32, 48, 96]
+        "babel": {
+          "include": ["expo-router"]
         }
       }
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

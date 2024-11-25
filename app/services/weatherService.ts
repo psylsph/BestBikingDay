@@ -1,7 +1,9 @@
 import axios from 'axios';
 import * as Location from 'expo-location';
 
-const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
+const API_KEY = process.env.OPENWEATHER_API_KEY;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const API_BASE = IS_PRODUCTION ? '/.netlify/functions' : 'http://localhost:3000/api';
 
 export interface WeatherForecast {
   date: string;
@@ -231,7 +233,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
     
     // Get current weather for location name and sunrise/sunset times
     const currentResponse = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric&appid=${API_KEY}`
+      `${API_BASE}/current-weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric`
     );
 
     // Update location with city name from OpenWeatherMap
@@ -240,7 +242,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
 
     // Get forecast data
     const forecastResponse = await axios.get(
-      `https://api.openweathermap.org/data/2.5/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric&appid=${API_KEY}`
+      `${API_BASE}/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric`
     );
 
     if (!forecastResponse.data || !forecastResponse.data.list) {
