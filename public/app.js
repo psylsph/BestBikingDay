@@ -41,7 +41,7 @@ function createHourlyDetails(forecast) {
     };
     
     const title = document.createElement('h2');
-    title.textContent = `Hourly Forecast for ${forecast.date}`;
+    title.textContent = `Forecast for ${forecast.date}`;
     
     const hourlyList = document.createElement('div');
     hourlyList.className = 'hourly-list';

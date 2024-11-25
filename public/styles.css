@@ -1,8 +1,11 @@
 :root {
-    --primary-bg: #0d1b2a;
-    --secondary-bg: #1b263b;
+    --primary-bg: #0a1420;
+    --secondary-bg: #151f2e;
     --text-color: #ffffff;
-    --text-color-secondary: rgba(255, 255, 255, 0.6);
+    --text-color-secondary: rgba(255, 255, 255, 0.5);
+    --card-bg: rgba(40, 80, 140, 0.15);
+    --shadow-color: rgba(0, 0, 0, 0.2);
+    --highlight-color: rgba(255, 255, 255, 0.05);
 }
 
 body {
@@ -18,8 +21,10 @@ body {
     max-width: 480px;
     margin: 0 auto;
     padding: 10px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--card-bg);
     border-radius: 12px;
+    box-shadow: 0 4px 6px var(--shadow-color),
+                inset 0 1px var(--highlight-color);
 }
 
 .header {
@@ -40,13 +45,22 @@ body {
 }
 
 .forecast-card {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--card-bg);
     border-radius: 10px;
     padding: 10px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
     align-items: center;
+    box-shadow: 0 2px 4px var(--shadow-color),
+                inset 0 1px var(--highlight-color);
+    transition: transform 0.2s ease;
+}
+
+.forecast-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px var(--shadow-color),
+                inset 0 1px var(--highlight-color);
 }
 
 .forecast-left {
@@ -131,7 +145,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(100, 150, 255, 0.2);
+    box-shadow: 0 2px 4px var(--shadow-color),
+                inset 0 1px var(--highlight-color);
 }
 
 .score-number {
@@ -155,9 +171,11 @@ body {
 .hour-container {
     display: flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--card-bg);
     border-radius: 4px;
     overflow: hidden;
+    box-shadow: 0 1px 2px var(--shadow-color),
+                inset 0 1px var(--highlight-color);
 }
 
 .best-hour-time {
@@ -175,26 +193,28 @@ body {
     padding: 4px 8px;
     min-width: 24px;
     text-align: center;
+    box-shadow: 0 1px 2px var(--shadow-color),
+                inset 0 1px var(--highlight-color);
 }
 
 .score-box.excellent {
-    background-color: rgba(0, 255, 0, 0.2);
+    background-color: #4caf50;
 }
 
 .score-box.good {
-    background-color: rgba(144, 238, 144, 0.2);
+    background-color: #8bc34a;
 }
 
 .score-box.fair {
-    background-color: rgba(255, 255, 0, 0.2);
+    background-color: #ffc107;
 }
 
 .score-box.poor {
-    background-color: rgba(255, 165, 0, 0.2);
+    background-color: #ff9800;
 }
 
 .score-box.bad {
-    background-color: rgba(255, 0, 0, 0.2);
+    background-color: #f44336;
 }
 
 .details-section {
@@ -212,6 +232,15 @@ body {
     white-space: nowrap;
     justify-content: flex-end;
     width: 100%;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.detail-row:hover {
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 2px var(--shadow-color),
+                inset 0 1px var(--highlight-color);
 }
 
 .detail-icon {
@@ -321,7 +350,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 6px 10px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--card-bg);
     border-radius: 6px;
 }
 
