@@ -8,6 +8,7 @@ export default function HomeScreen() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [location, setLocation] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const styles = StyleSheet.create({
     container: {
@@ -62,21 +63,37 @@ export default function HomeScreen() {
   }, []);
 
   const loadWeatherData = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const data = await fetchWeatherForecast();
       setForecasts(data.forecasts);
       setLocation(data.location);
       setError(null);
-    } catch (err) {
-      setError('Failed to load weather data. Please try again later.');
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to load weather data. Please try again later.';
+      setError(errorMessage);
+      setForecasts([]);
+      setLocation('');
+    } finally {
+      setLoading(false);
     }
   };
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
+      <LinearGradient
+        colors={['#0d1b2a', '#1b263b']}
+        style={styles.container}
+      >
+        <StatusBar barStyle="light-content" />
+        <View style={styles.header}>
+          <Text style={styles.title}>Best Biking Day</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </LinearGradient>
     );
   }
 

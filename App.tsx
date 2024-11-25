@@ -3,8 +3,8 @@ import { StyleSheet, View, Text, StatusBar, Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useFonts } from 'expo-font';
-import WeatherCard from './components/WeatherCard';
 import { fetchWeatherForecast, WeatherForecast } from './app/services/weatherService';
+import HomeScreen from './app/index';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -26,12 +26,15 @@ export default function App() {
 
   const loadWeatherData = async () => {
     try {
+      console.log('Fetching weather data...');
       const data = await fetchWeatherForecast();
+      console.log('Weather data received:', data);
       setForecasts(data.forecasts);
       setLocation(data.location);
       setForecastTime(data.forecastTime);
       setError(null);
     } catch (err) {
+      console.error('Error loading weather data:', err);
       setError('Failed to load weather data. Please try again later.');
     }
   };
@@ -56,24 +59,11 @@ export default function App() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Best Biking Day</Text>
-          <Text style={styles.subtitle}>3-Day Weather Forecast • {location} {forecastTime && `[${forecastTime}]`}</Text>
-        </View>
-        
-        {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : (
-          <View style={styles.cardsContainer}>
-            {forecasts.map((forecast, index) => (
-              <View key={index} style={styles.cardWrapper}>
-                <WeatherCard forecast={forecast} />
-              </View>
-            ))}
-          </View>
-        )}
+        <HomeScreen 
+          forecasts={forecasts} 
+          location={location} 
+          forecastTime={forecastTime}
+        />
       </Animated.ScrollView>
     </GestureHandlerRootView>
   );

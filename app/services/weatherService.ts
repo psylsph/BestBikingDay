@@ -117,38 +117,90 @@ function calculateBikingScore(temp: number, windSpeed: number, precipitation: nu
 }
 
 export async function getCurrentLocation(): Promise<LocationInfo> {
+  let permissionError = false;
+  
   try {
+    console.log('Step 1: Checking location permissions...');
     let { status } = await Location.requestForegroundPermissionsAsync();
+    console.log('Permission status:', status);
+    
     if (status !== 'granted') {
-      return {
-        coords: {
-          latitude: 40.7128,
-          longitude: -74.0060
-        },
-        city: 'New York'
-      };
+      permissionError = true;
+      throw new Error('Location permission denied by user');
     }
 
-    const location = await Location.getCurrentPositionAsync({});
-
-    // Get city name from coordinates
-    const response = await axios.get(
-      `https://api.openweathermap.org/geo/1.0/reverse?lat=${location.coords.latitude}&lon=${location.coords.longitude}&limit=1&appid=${API_KEY}`
-    );
-
-    if (!response.data || response.data.length === 0) {
-      throw new Error('Failed to get city name');
+    console.log('Step 2: Checking if location services are enabled...');
+    const enabled = await Location.hasServicesEnabledAsync();
+    console.log('Location services enabled:', enabled);
+    
+    if (!enabled) {
+      throw new Error('Location services are disabled on device');
     }
 
+    console.log('Step 3: Getting location...');
+    let location;
+    try {
+      const lastKnownLocation = await Location.getLastKnownPositionAsync();
+      if (lastKnownLocation) {
+        console.log('Found last known location:', lastKnownLocation.coords);
+        location = lastKnownLocation;
+      } else {
+        location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          mayShowUserSettingsDialog: true
+        });
+        console.log('Got new high accuracy location:', location.coords);
+      }
+    } catch (e) {
+      console.warn('High accuracy location failed:', e);
+      console.log('Falling back to balanced accuracy...');
+      location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+        mayShowUserSettingsDialog: true
+      });
+      console.log('Got balanced accuracy location:', location.coords);
+    }
+
+    if (!location) {
+      throw new Error('Failed to get location coordinates');
+    }
+
+    // Return coordinates only - we'll get the city name from OpenWeatherMap
     return {
       coords: {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude
       },
-      city: response.data[0].name
+      city: '' // Will be filled in by fetchWeatherForecast
     };
+
   } catch (error) {
-    return {
+    const errorMessage = permissionError ? 
+      'Please enable location permissions in your device settings to get local weather data' :
+      'Could not get your location. Please check if location services are enabled';
+    console.error('Location error:', error, errorMessage);
+    throw new Error(errorMessage);
+  }
+}
+
+export async function fetchWeatherForecast(): Promise<{ location: string; forecasts: WeatherForecast[]; forecastTime: string }> {
+  let location;
+  let usingFallback = false;
+
+  try {
+    console.log('Attempting to get current location...');
+    location = await getCurrentLocation();
+    console.log('Successfully got location:', location);
+  } catch (error: any) {
+    console.error('Location error:', error.message);
+    if (error.message.includes('permission') || error.message.includes('enable')) {
+      console.log('Permission or settings error - propagating to UI');
+      throw error;
+    }
+    console.log('Using fallback location (New York)');
+    usingFallback = true;
+    location = {
       coords: {
         latitude: 40.7128,
         longitude: -74.0060
@@ -156,16 +208,18 @@ export async function getCurrentLocation(): Promise<LocationInfo> {
       city: 'New York'
     };
   }
-}
 
-export async function fetchWeatherForecast(): Promise<{ location: string; forecasts: WeatherForecast[]; forecastTime: string }> {
   try {
-    const location = await getCurrentLocation();
+    console.log('Fetching weather data for:', location.coords);
     
-    // Get current weather for sunrise/sunset times
+    // Get current weather for location name and sunrise/sunset times
     const currentResponse = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric&appid=${API_KEY}`
     );
+
+    // Update location with city name from OpenWeatherMap
+    location.city = currentResponse.data.name || location.city;
+    console.log('Got city name from OpenWeatherMap:', location.city);
 
     // Get forecast data
     const forecastResponse = await axios.get(
