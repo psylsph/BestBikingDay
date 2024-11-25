@@ -5,6 +5,7 @@ const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
 
 export interface WeatherForecast {
   date: string;
+  forecastTime: string;
   temperature: number;
   temp: {
     day: number;
@@ -157,21 +158,46 @@ export async function getCurrentLocation(): Promise<LocationInfo> {
   }
 }
 
-export async function fetchWeatherForecast(): Promise<{ location: string; forecasts: WeatherForecast[] }> {
+export async function fetchWeatherForecast(): Promise<{ location: string; forecasts: WeatherForecast[]; forecastTime: string }> {
   try {
     const location = await getCurrentLocation();
-    const response = await axios.get(
+    
+    // Get current weather for sunrise/sunset times
+    const currentResponse = await axios.get(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric&appid=${API_KEY}`
+    );
+
+    // Get forecast data
+    const forecastResponse = await axios.get(
       `https://api.openweathermap.org/data/2.5/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric&appid=${API_KEY}`
     );
 
-    if (!response.data || !response.data.list) {
+    if (!forecastResponse.data || !forecastResponse.data.list) {
       throw new Error('Invalid weather data received');
     }
+
+    const forecastTime = new Date().toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    // Get sunrise and sunset times
+    const sunrise = new Date(currentResponse.data.sys.sunrise * 1000);
+    const sunset = new Date(currentResponse.data.sys.sunset * 1000);
+
+    const formatTime = (date: Date) => {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    };
 
     // Group forecasts by day
     const dailyForecasts = new Map<string, any[]>();
     
-    response.data.list.forEach((item: any) => {
+    forecastResponse.data.list.forEach((item: any) => {
       const date = new Date(item.dt * 1000);
       const dateKey = date.toISOString().split('T')[0];
       
@@ -187,18 +213,11 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
       .slice(0, 3)
       .map(([dateStr, items]) => {
         const date = new Date(dateStr);
-        const dayStart = new Date(date);
-        dayStart.setHours(6, 0, 0, 0); // 6 AM
-        const dayEnd = new Date(date);
-        dayEnd.setHours(20, 0, 0, 0); // 8 PM
-
-        const formatTime = (date: Date) => {
-          return date.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit',
-            hour12: true 
-          });
-        };
+        
+        // Adjust sunrise/sunset times for each forecast day
+        const daysSinceToday = Math.round((date.getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
+        const forecastSunrise = new Date(sunrise.getTime() + daysSinceToday * 24 * 60 * 60 * 1000);
+        const forecastSunset = new Date(sunset.getTime() + daysSinceToday * 24 * 60 * 60 * 1000);
 
         // Calculate daily averages
         const avgTemp = items.reduce((sum, item) => sum + item.main.temp, 0) / items.length;
@@ -246,6 +265,7 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
 
         return {
           date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+          forecastTime,
           temperature: avgTemp,
           temp: {
             day: avgTemp,
@@ -261,15 +281,15 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
           uvi,
           precipitation: precipitation * 100,
           bikingScore,
-          sunrise: formatTime(dayStart),
-          sunset: formatTime(dayEnd),
+          sunrise: formatTime(forecastSunrise),
+          sunset: formatTime(forecastSunset),
         };
-      })
-      .filter((forecast): forecast is WeatherForecast => forecast !== null);
+      });
 
     return {
       location: location.city,
       forecasts,
+      forecastTime,
     };
   } catch (error) {
     console.error('Weather error:', error);

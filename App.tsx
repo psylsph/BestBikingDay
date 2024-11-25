@@ -11,6 +11,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export default function App() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [location, setLocation] = useState<string>('');
+  const [forecastTime, setForecastTime] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   const [fontsLoaded] = useFonts({
@@ -28,6 +29,7 @@ export default function App() {
       const data = await fetchWeatherForecast();
       setForecasts(data.forecasts);
       setLocation(data.location);
+      setForecastTime(data.forecastTime);
       setError(null);
     } catch (err) {
       setError('Failed to load weather data. Please try again later.');
@@ -56,7 +58,7 @@ export default function App() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Best Biking Day</Text>
-          <Text style={styles.subtitle}>3-Day Weather Forecast • {location}</Text>
+          <Text style={styles.subtitle}>3-Day Weather Forecast • {location} {forecastTime && `[${forecastTime}]`}</Text>
         </View>
         
         {error ? (
