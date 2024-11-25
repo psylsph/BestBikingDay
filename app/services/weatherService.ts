@@ -17,13 +17,14 @@ export interface WeatherForecast {
     main: string;
   };
   wind_speed: number;
-  humidity: number;
+  uvi: number;
   precipitation: number;
   bikingScore: {
     score: number;
     message: string;
   };
-  dayHours: string;
+  sunrise: string;
+  sunset: string;
 }
 
 interface LocationInfo {
@@ -128,7 +129,7 @@ export async function getCurrentLocation(): Promise<LocationInfo> {
     }
 
     const location = await Location.getCurrentPositionAsync({});
-    
+
     // Get city name from coordinates
     const response = await axios.get(
       `https://api.openweathermap.org/geo/1.0/reverse?lat=${location.coords.latitude}&lon=${location.coords.longitude}&limit=1&appid=${API_KEY}`
@@ -159,7 +160,6 @@ export async function getCurrentLocation(): Promise<LocationInfo> {
 export async function fetchWeatherForecast(): Promise<{ location: string; forecasts: WeatherForecast[] }> {
   try {
     const location = await getCurrentLocation();
-    
     const response = await axios.get(
       `https://api.openweathermap.org/data/2.5/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=metric&appid=${API_KEY}`
     );
@@ -173,7 +173,7 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
     
     response.data.list.forEach((item: any) => {
       const date = new Date(item.dt * 1000);
-      const dateKey = date.toISOString().split('T')[0]; // Use ISO date string for consistent keys
+      const dateKey = date.toISOString().split('T')[0];
       
       if (!dailyForecasts.has(dateKey)) {
         dailyForecasts.set(dateKey, []);
@@ -186,23 +186,26 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
     const forecasts = Array.from(dailyForecasts.entries())
       .slice(0, 3)
       .map(([dateStr, items]) => {
-        const date = new Date(dateStr + 'T00:00:00'); // Add time component for proper date parsing
-        if (isNaN(date.getTime())) {
-          console.error('Invalid date:', dateStr);
-          return null;
-        }
+        const date = new Date(dateStr);
+        const dayStart = new Date(date);
+        dayStart.setHours(6, 0, 0, 0); // 6 AM
+        const dayEnd = new Date(date);
+        dayEnd.setHours(20, 0, 0, 0); // 8 PM
 
-        const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
-        const monthDay = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
-        const formattedDate = `${dayOfWeek}, ${monthDay}`;
+        const formatTime = (date: Date) => {
+          return date.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+          });
+        };
 
         // Calculate daily averages
         const avgTemp = items.reduce((sum, item) => sum + item.main.temp, 0) / items.length;
         const avgWindSpeed = items.reduce((sum, item) => sum + item.wind.speed, 0) / items.length;
         const precipitation = items.reduce((sum, item) => {
-          const rain = item.rain ? item.rain['3h'] || 0 : 0;
-          const snow = item.snow ? item.snow['3h'] || 0 : 0;
-          return sum + rain + snow;
+          const pop = item.pop || 0; // Probability of precipitation
+          return Math.max(sum, pop);
         }, 0);
 
         // Get most common weather condition
@@ -217,15 +220,32 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
 
         const weatherInfo = items[0].weather[0];
 
+        // Estimate UV index based on weather conditions and cloud cover
+        let baseUVI = 6; // Default moderate-high UV index
+        const clouds = items.reduce((sum, item) => sum + item.clouds.all, 0) / items.length;
+        
+        // Reduce UV based on cloud cover
+        baseUVI *= (1 - clouds / 200); // clouds.all is percentage, we want less impact
+        
+        // Adjust based on weather conditions
+        if (mostCommonWeather === 'Rain' || mostCommonWeather === 'Snow') {
+          baseUVI *= 0.5;
+        } else if (mostCommonWeather === 'Clouds') {
+          baseUVI *= 0.7;
+        }
+        
+        // Ensure UV index is within bounds
+        const uvi = Math.max(1, Math.min(11, Math.round(baseUVI)));
+
         const bikingScore = calculateBikingScore(
           avgTemp,
           avgWindSpeed,
-          precipitation,
+          precipitation * 100,
           mostCommonWeather
         );
 
         return {
-          date: formattedDate,
+          date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
           temperature: avgTemp,
           temp: {
             day: avgTemp,
@@ -238,18 +258,19 @@ export async function fetchWeatherForecast(): Promise<{ location: string; foreca
             main: weatherInfo.main,
           },
           wind_speed: avgWindSpeed,
-          humidity: items[0].main.humidity,
-          precipitation: precipitation * 10, // Convert to percentage
+          uvi,
+          precipitation: precipitation * 100,
           bikingScore,
-          dayHours: '8 AM - 6 PM',
+          sunrise: formatTime(dayStart),
+          sunset: formatTime(dayEnd),
         };
-      });
+      })
+      .filter((forecast): forecast is WeatherForecast => forecast !== null);
 
     return {
       location: location.city,
-      forecasts
+      forecasts,
     };
-
   } catch (error) {
     console.error('Weather error:', error);
     throw new Error('Failed to fetch weather data');

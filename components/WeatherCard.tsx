@@ -16,6 +16,34 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
     return ['#f44336', '#d32f2f'];
   };
 
+  const getWindIcons = (speed: number) => {
+    // Scale: 0-10: 1, 11-20: 2, 21-30: 3, 31-40: 4, 40+: 5
+    const count = Math.min(5, Math.max(1, Math.ceil(speed / 10)));
+    return '💨'.repeat(count);
+  };
+
+  const getUVIDescription = (uvi: number) => {
+    if (uvi <= 2) return 'Low';
+    if (uvi <= 5) return 'Moderate';
+    if (uvi <= 7) return 'High';
+    if (uvi <= 10) return 'Very High';
+    return 'Extreme';
+  };
+
+  const getUVIColor = (uvi: number) => {
+    if (uvi <= 2) return '#4CAF50';  // Green
+    if (uvi <= 5) return '#FFC107';  // Yellow
+    if (uvi <= 7) return '#FF9800';  // Orange
+    if (uvi <= 10) return '#F44336'; // Red
+    return '#9C27B0';  // Purple
+  };
+
+  const getRainIcons = (precipitation: number) => {
+    // Scale: 0-20: 1, 21-40: 2, 41-60: 3, 61-80: 4, 81-100: 5
+    const count = Math.min(5, Math.max(1, Math.ceil(precipitation / 20)));
+    return '🌧️'.repeat(count);
+  };
+
   const colors = getScoreColors(forecast.bikingScore.score);
 
   const styles = StyleSheet.create({
@@ -48,9 +76,19 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
       fontWeight: '600',
       color: '#ffffff',
     },
-    hours: {
-      fontSize: 10,
+    sunTimes: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 4,
+    },
+    sunIcon: {
+      fontSize: 14,
+    },
+    sunTime: {
+      fontSize: 12,
       color: '#ffffff99',
+      marginRight: 8,
     },
     weatherInfo: {
       flexDirection: 'row',
@@ -101,23 +139,33 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
     detailsSection: {
       flex: 1,
       maxWidth: '30%',
-      gap: 4,
+      gap: 8,
       alignItems: 'flex-end',
     },
     details: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
-      gap: 4,
+      gap: 8,
     },
-    detailLabel: {
-      fontSize: 11,
+    detailIcon: {
+      fontSize: 16,
       color: '#ffffff99',
     },
+    weatherIcons: {
+      fontSize: 16,
+      letterSpacing: -2,
+    },
     detailText: {
-      fontSize: 12,
+      fontSize: 13,
       color: '#ffffff',
       fontWeight: '500',
+    },
+    detailRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 8,
     },
   });
 
@@ -131,7 +179,12 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
           <View style={styles.mainInfo}>
             <View style={styles.dateContainer}>
               <Text style={styles.date}>{forecast.date}</Text>
-              <Text style={styles.hours}>{forecast.dayHours}</Text>
+              <View style={styles.sunTimes}>
+                <Text style={styles.sunIcon}>🌅</Text>
+                <Text style={styles.sunTime}>{forecast.sunrise}</Text>
+                <Text style={styles.sunIcon}>🌇</Text>
+                <Text style={styles.sunTime}>{forecast.sunset}</Text>
+              </View>
             </View>
             <View style={styles.weatherInfo}>
               <Image
@@ -155,18 +208,24 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
         </View>
 
         <View style={styles.detailsSection}>
-          <View style={styles.details}>
-            <Text style={styles.detailLabel}>Wind: </Text>
-            <Text style={styles.detailText}>{Math.round(forecast.wind_speed)} km/h</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailIcon}>💨</Text>
+            <Text style={styles.detailText}>
+              {Math.round(forecast.wind_speed)} m/s
+            </Text>
           </View>
-          <View style={styles.details}>
-            <Text style={styles.detailLabel}>Humidity: </Text>
-            <Text style={styles.detailText}>{forecast.humidity}%</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailIcon}>☀️</Text>
+            <Text style={[styles.detailText, { color: getUVIColor(forecast.uvi) }]}>
+              UV {getUVIDescription(forecast.uvi)}
+            </Text>
           </View>
           {forecast.precipitation > 0 && (
-            <View style={styles.details}>
-              <Text style={styles.detailLabel}>Rain: </Text>
-              <Text style={styles.detailText}>{Math.round(forecast.precipitation)}%</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailIcon}>🌧️</Text>
+              <Text style={styles.detailText}>
+                {Math.round(forecast.precipitation)}%
+              </Text>
             </View>
           )}
         </View>
