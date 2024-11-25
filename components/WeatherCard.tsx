@@ -115,22 +115,22 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
       justifyContent: 'center',
     },
     scoreWheel: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: 68,
+      height: 68,
+      borderRadius: 34,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 3,
       borderColor: '#ffffff40',
     },
     scoreNumber: {
-      color: 'white',
-      fontSize: 32,
+      fontSize: 27,
       fontWeight: 'bold',
+      color: 'white',
     },
     scoreLabel: {
+      fontSize: 9,
       color: 'white',
-      fontSize: 11,
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -232,7 +232,6 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
                 style={styles.scoreWheel}
               >
                 <Text style={styles.scoreNumber}>{forecast.bikingScore.score}</Text>
-                <Text style={styles.scoreLabel}>Score</Text>
               </LinearGradient>
               <View style={styles.bestHours}>
                 {forecast.bestHours.map((hour, index) => (

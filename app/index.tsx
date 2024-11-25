@@ -3,42 +3,47 @@ import { StyleSheet, View, Text, ActivityIndicator, StatusBar } from 'react-nati
 import { LinearGradient } from 'expo-linear-gradient';
 import WeatherCard from '../components/WeatherCard';
 import weatherService, { WeatherForecast } from './services/weatherService';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+interface HomeScreenProps {
+  forecasts: WeatherForecast[];
+  location: string;
+  forecastTime: string;
+}
 
 export default function HomeScreen() {
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [location, setLocation] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      height: '100%',
+      minHeight: '100%',
     },
     header: {
-      paddingTop: 40,
-      paddingBottom: 15,
-      paddingHorizontal: 20,
+      paddingVertical: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    title: {
-      fontSize: 28,
+    location: {
+      fontSize: 20,
       fontWeight: 'bold',
       color: '#ffffff',
-      textAlign: 'left',
+      textAlign: 'center',
     },
-    subtitle: {
-      fontSize: 14,
-      color: '#ffffff99',
-      marginTop: 4,
-    },
-    content: {
+    cardsContainer: {
       flex: 1,
-      padding: 12,
-      flexDirection: 'column',
-      gap: 12,
+      paddingHorizontal: 12,
+      gap: 8,
+      backgroundColor: 'transparent',
     },
-    cardWrapper: {
-      width: '100%',
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     errorContainer: {
       flex: 1,
@@ -51,10 +56,8 @@ export default function HomeScreen() {
       fontSize: 16,
       textAlign: 'center',
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+    footer: {
+      height: 40,
     },
   });
 
@@ -87,9 +90,6 @@ export default function HomeScreen() {
         style={styles.container}
       >
         <StatusBar barStyle="light-content" />
-        <View style={styles.header}>
-          <Text style={styles.title}>Best Biking Day</Text>
-        </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
@@ -103,23 +103,23 @@ export default function HomeScreen() {
       style={styles.container}
     >
       <StatusBar barStyle="light-content" />
-      <View style={styles.header}>
-        <Text style={styles.title}>Best Biking Day</Text>
-        <Text style={styles.subtitle}>3-Day Weather Forecast • {location}</Text>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <Text style={styles.location}>{location}</Text>
+        </View>
+        {forecasts.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#ffffff" />
+          </View>
+        ) : (
+          <View style={styles.cardsContainer}>
+            {forecasts.map((forecast, index) => (
+              <WeatherCard key={index} forecast={forecast} />
+            ))}
+          </View>
+        )}
+        <View style={styles.footer} />
       </View>
-      {forecasts.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#ffffff" />
-        </View>
-      ) : (
-        <View style={styles.content}>
-          {forecasts.map((forecast, index) => (
-            <View key={index} style={styles.cardWrapper}>
-              <WeatherCard forecast={forecast} />
-            </View>
-          ))}
-        </View>
-      )}
     </LinearGradient>
   );
 }
