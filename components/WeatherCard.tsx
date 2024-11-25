@@ -209,23 +209,23 @@ export default function WeatherCard({ forecast }: WeatherCardProps) {
 
         <View style={styles.detailsSection}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>💨</Text>
-            <Text style={styles.detailText}>
+          <Text style={styles.detailText}>
               {Math.round(forecast.wind_speed)} m/s
             </Text>
+            <Text style={styles.detailIcon}>💨</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>☀️</Text>
-            <Text style={[styles.detailText, { color: getUVIColor(forecast.uvi) }]}>
+          <Text style={[styles.detailText, { color: getUVIColor(forecast.uvi) }]}>
               UV {getUVIDescription(forecast.uvi)}
             </Text>
+            <Text style={styles.detailIcon}>☀️</Text>
           </View>
           {forecast.precipitation > 0 && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailIcon}>🌧️</Text>
               <Text style={styles.detailText}>
                 {Math.round(forecast.precipitation)}%
               </Text>
+              <Text style={styles.detailIcon}>🌧️</Text>
             </View>
           )}
         </View>
