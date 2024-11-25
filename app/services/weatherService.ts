@@ -367,16 +367,18 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
 
       console.log('Best cycling hours (in time order):', bestHours);
 
-      const bikingScore = calculateBikingScore(
-        items[0].main.temp,
-        items[0].wind.speed,
-        items.some(item => 
-          item.rain?.['3h'] || item.snow?.['3h'] || 
-          item.weather[0].main.toLowerCase().includes('rain') ||
-          item.weather[0].main.toLowerCase().includes('snow')
-        ) ? 100 : 0,
-        items[0].weather[0].main
-      );
+      // Use the highest score of the day as the summary score
+      const bestScore = Math.max(...hourlyForecasts.map(f => f.score));
+      const bestScoreHour = hourlyForecasts.find(f => f.score === bestScore)!;
+      const bikingScore = {
+        score: bestScore,
+        message: calculateBikingScore(
+          bestScoreHour.temperature,
+          bestScoreHour.windSpeed / 3.6, // Convert back to m/s for calculation
+          bestScoreHour.precipitation,
+          bestScoreHour.description
+        ).message
+      };
 
       forecasts.push({
         date,
@@ -392,7 +394,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
           icon: items[0].weather[0].icon,
           main: items[0].weather[0].main
         },
-        wind_speed: Math.round(items[0].wind.speed * 3.6), // Convert m/s to km/h
+        wind_speed: Math.round(items[0].wind.speed * 3.6),
         uvi: items[0].uvi || 0,
         precipitation: items.some(item => 
           item.rain?.['3h'] || item.snow?.['3h'] || 
