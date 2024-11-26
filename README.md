@@ -32,7 +32,7 @@ npm install
 
 3. Create a `.env` file in the root directory:
 ```bash
-OPENWEATHER_API_KEY=your_api_key_here
+EXPO_PUBLIC_OPENWEATHER_API_KEY=your_api_key_here
 ```
 
 Replace `your_api_key_here` with your OpenWeatherMap API key. You can get one at [OpenWeatherMap](https://openweathermap.org/api).
