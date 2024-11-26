@@ -60,26 +60,7 @@ This will start the Expo development server. You can then:
 npm run build:web
 ```
 
-This will create a production-ready build in the `web-build` directory.
-
-### Mobile Build
-
-For mobile builds, you'll need an [Expo](https://expo.dev/) account.
-
-1. Install Expo CLI globally:
-```bash
-npm install -g expo-cli
-```
-
-2. Build for Android:
-```bash
-expo build:android
-```
-
-3. Build for iOS:
-```bash
-expo build:ios
-```
+This will create a production-ready build in the `dist` directory.
 
 ## Deploying to Netlify 🚀
 
@@ -92,7 +73,7 @@ expo build:ios
 
 3. Add environment variables:
    - Go to Site settings > Build & deploy > Environment
-   - Add `OPENWEATHER_API_KEY` with your API key
+   - Add `EXPO_PUBLIC_OPENWEATHER_API_KEY` with your API key
 
 4. Deploy methods:
 
@@ -125,7 +106,7 @@ expo build:ios
    
    3. Deploy:
    ```bash
-   netlify deploy --dir dist--prod
+   netlify deploy --dir dist --prod
    ```
 
 ## Project Structure 📁
