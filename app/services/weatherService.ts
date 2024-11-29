@@ -58,45 +58,61 @@ const calculateBikingScore = (temp: number, windSpeed: number, precipitation: nu
   let score = 100;
   let messages: string[] = [];
 
-  // Temperature score (ideal range: 15-25°C)
-  if (temp < 5) {
-    score -= 25;
-    messages.push("Too cold");
-  } else if (temp < 10) {
-    score -= 15;
-    messages.push("Bit chilly");
-  } else if (temp > 35) {
-    score -= 25;
-    messages.push("Too hot");
-  } else if (temp > 30) {
-    score -= 15;
-    messages.push("Quite warm");
+  // Temperature score (baseline: 18-21°C, -2 points per degree deviation)
+  if (temp < 18) {
+    const degreesBelow = 18 - temp;
+    score -= degreesBelow * 2;
+    if (temp <= 2) {
+      messages.push("Too cold");
+    } else if (temp <= 5) {
+      messages.push("Very chilly");
+    } else if (degreesBelow > 2) {
+      messages.push("Bit chilly");
+    } else {
+      messages.push("Slightly cool");
+    }
+  } else if (temp > 21) {
+    const degreesAbove = temp - 21;
+    score -= degreesAbove * 2;
+    if (degreesAbove > 8) {
+      messages.push("Too hot");
+    } else if (degreesAbove > 5) {
+      messages.push("Very warm");
+    } else if (degreesAbove > 2) {
+      messages.push("Bit warm");
+    } else {
+      messages.push("Slightly warm");
+    }
   }
 
-  // Wind speed score (ideal: < 20 km/h)
-  if (windSpeed > 40) {
-    score -= 30;
-    messages.push("Very windy");
-  } else if (windSpeed > 30) {
-    score -= 20;
-    messages.push("Windy");
-  } else if (windSpeed > 20) {
+  // Wind speed score (in km/h)
+  // 0-16 km/h: Ideal
+  // 16-24 km/h: Slightly challenging
+  // 24-32 km/h: Difficult
+  // 32+ km/h: Strong/dangerous
+  if (windSpeed > 32) {
+    score -= 40;
+    messages.push("Strong winds - exercise caution");
+  } else if (windSpeed > 24) {
+    score -= 25;
+    messages.push("Difficult wind conditions");
+  } else if (windSpeed > 16) {
     score -= 10;
-    messages.push("Breezy");
+    messages.push("Slightly challenging winds");
   }
 
-  // Precipitation score (stricter for rain)
+  // Precipitation score (stricter for heavy rain)
   if (precipitation > 10) {
     score -= 60;
     messages.push("Heavy rain");
   } else if (precipitation > 5) {
-    score -= 45;
+    score -= 40;
     messages.push("Moderate rain");
   } else if (precipitation > 2) {
-    score -= 30;
+    score -= 15;
     messages.push("Light rain");
   } else if (precipitation > 0) {
-    score -= 15;
+    score -= 5;
     messages.push("Slight chance of rain");
   }
 
@@ -125,8 +141,8 @@ const calculateBikingScore = (temp: number, windSpeed: number, precipitation: nu
       break;
   }
 
-  // Ensure score doesn't go below 0
-  score = Math.max(0, score);
+  // Ensure score doesn't go below 0 and is always an integer
+  score = Math.max(0, Math.round(score));
 
   // Get the main message
   const message = messages.length > 0 ? messages[0] : "Perfect for biking!";
@@ -330,7 +346,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
           // Include all hourly forecasts
           const hourlyScore = calculateBikingScore(
             items[i].main.temp,
-            items[i].wind.speed,
+            items[i].wind.speed * 3.6, // Convert m/s to km/h
             items[i].rain?.['3h'] || items[i].snow?.['3h'] ? 100 : 0,
             items[i].weather[0].main
           );
@@ -341,7 +357,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
               minute: '2-digit',
               hour12: true 
             }),
-            score: hourlyScore.score,
+            score: Math.round(hourlyScore.score),
             message: hourlyScore.message,
             temperature: Math.round(items[i].main.temp),
             windSpeed: Math.round(items[i].wind.speed * 3.6), // Convert m/s to km/h
@@ -378,7 +394,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
           items.reduce((sum, item) => sum + item.main.temp, 0) / items.length
         ),
         windSpeed: Math.round(
-          items.reduce((sum, item) => sum + item.wind.speed, 0) / items.length
+          items.reduce((sum, item) => sum + item.wind.speed * 3.6, 0) / items.length // Convert m/s to km/h
         ),
         precipitation: items.some(item => 
           item.rain?.['3h'] || item.snow?.['3h'] || 
@@ -412,7 +428,7 @@ const fetchWeatherForecast = async (): Promise<{ location: string; forecasts: We
           icon: items[0].weather[0].icon,
           main: items[0].weather[0].main
         },
-        wind_speed: Math.round(items[0].wind.speed * 3.6),
+        wind_speed: Math.round(items[0].wind.speed * 3.6), // Convert m/s to km/h
         uvi: items[0].uvi || 0,
         precipitation: typicalConditions.precipitation,
         bikingScore,
